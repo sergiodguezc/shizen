@@ -1,4 +1,4 @@
-resolver: ghc-8.10.2
+resolver: ghc-8.10.7
 packages:
 - .
 extra-deps:
@@ -100,6 +100,13 @@ extra-deps:
 - mwc-random-0.15.0.2@sha256:109e0fb72ce64bda468fc44d9cb5abbf455d6337140b57eb851a8183baba0597,3372
 - mwc-random-accelerate-0.2.0.0@sha256:5785280c6fb511154eab9bf32a1149a9b084dd21b00e9696b0f89b87d90fabf8,1678
 - math-functions-0.3.4.2@sha256:5d942f0d6478c2a6b22049c033943538f8dd357c66ff874d328082136433cafb,4791
+- fclabels-2.0.5.1
+- linear-accelerate-0.7.0.0@sha256:096fba507820938405b0f70f6904f5844c73d8adb45f9b0a4d8680f4d3e98c69,2469
+- linear-1.21.10@sha256:fb5253a777ef045c42de576625a5aab8dd6e10f9ba1a4cab9eb626296975e754,3951
+- bytes-0.17.2@sha256:65630fccda3b3065d49065edaa5ef4698a3e4711ab2cb40cdabea636c3553d19,2465
+- binary-orphans-1.0.2@sha256:ffabc984b68562f568533c87186d3baa7d2bbac89f6ea82288396b5235715905,2264
+- containers-accelerate-0.1.0.0@sha256:529614e579efe5255f310ea2186af0dcc9373644d4ce6f22c72e9c6903f8a6d9,1895
+- hashable-accelerate-0.1.0.0@sha256:e701ad7211058567eab3254fc977a04f0ea8c7ddd24495b90aa7a89b1619f548,1214
 flags:
   llvm-hs:
     shared-llvm: true

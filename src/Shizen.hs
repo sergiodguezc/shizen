@@ -11,7 +11,4 @@
 --------------------------------------------------------------------
 
 module Shizen (
-    module Shizen.AntColony.Types
 ) where
-
-import Shizen.AntColony.Types

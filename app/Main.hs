@@ -17,4 +17,4 @@ module Main (main) where
 import Shizen
 
 main :: IO ()
-main = shizen
+main = putStrLn "main"

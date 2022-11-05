@@ -25,8 +25,10 @@ source-repository head
 
 library
   exposed-modules:
+      Config
       Shizen
-      Shizen.AntColony.Main
+      Shizen.AntColony.AntColony
+      Shizen.AntColony.Position
       Shizen.AntColony.Types
   other-modules:
       Paths_shizen
@@ -37,8 +39,11 @@ library
     , accelerate-llvm-native ==1.3.0.0
     , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
+    , containers-accelerate ==0.1.0.0
+    , linear-accelerate ==0.7.0.0
     , llvm-hs ==9.0.1
     , llvm-hs-pure ==9.0.0
+    , mwc-random ==0.15.0.2
     , mwc-random-accelerate ==0.2.0.0
   default-language: Haskell2010
 
@@ -54,8 +59,11 @@ executable shizen-exe
     , accelerate-llvm-native ==1.3.0.0
     , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
+    , containers-accelerate ==0.1.0.0
+    , linear-accelerate ==0.7.0.0
     , llvm-hs ==9.0.1
     , llvm-hs-pure ==9.0.0
+    , mwc-random ==0.15.0.2
     , mwc-random-accelerate ==0.2.0.0
     , shizen
   default-language: Haskell2010
@@ -73,8 +81,11 @@ test-suite shizen-test
     , accelerate-llvm-native ==1.3.0.0
     , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
+    , containers-accelerate ==0.1.0.0
+    , linear-accelerate ==0.7.0.0
     , llvm-hs ==9.0.1
     , llvm-hs-pure ==9.0.0
+    , mwc-random ==0.15.0.2
     , mwc-random-accelerate ==0.2.0.0
     , shizen
   default-language: Haskell2010
