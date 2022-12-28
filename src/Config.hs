@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+-- {-# LANGUAGE TemplateHaskell #-}
 
 --------------------------------------------------------------------
 -- |
@@ -43,13 +43,13 @@ module Config where
 --   ]
 --
 --
--- header :: [String]
--- header =
---   [ "shizen (c) 2022 Sergio Domínguez"
---   , ""
---   , "Usage: shizen [OPTIONS]"
---   , ""
---   ]
+header :: [String]
+header =
+  [ "shizen (c) 2022 Sergio Domínguez"
+  , ""
+  , "Usage: shizen [OPTIONS]"
+  , ""
+  ]
 --
 -- footer :: [String]
 -- footer =

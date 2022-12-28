@@ -28,7 +28,7 @@ library
       Config
       Shizen
       Shizen.AntColony.AntColony
-      Shizen.AntColony.Position
+      Shizen.AntColony.Random
       Shizen.AntColony.Types
   other-modules:
       Paths_shizen
@@ -45,6 +45,7 @@ library
     , llvm-hs-pure ==9.0.0
     , mwc-random ==0.15.0.2
     , mwc-random-accelerate ==0.2.0.0
+    , random ==1.2.1.1
   default-language: Haskell2010
 
 executable shizen-exe
@@ -65,6 +66,7 @@ executable shizen-exe
     , llvm-hs-pure ==9.0.0
     , mwc-random ==0.15.0.2
     , mwc-random-accelerate ==0.2.0.0
+    , random ==1.2.1.1
     , shizen
   default-language: Haskell2010
 
@@ -87,5 +89,6 @@ test-suite shizen-test
     , llvm-hs-pure ==9.0.0
     , mwc-random ==0.15.0.2
     , mwc-random-accelerate ==0.2.0.0
+    , random ==1.2.1.1
     , shizen
   default-language: Haskell2010

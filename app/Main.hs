@@ -14,7 +14,7 @@
 
 module Main (main) where
 
-import Shizen
+import Shizen.AntColony.AntColony as ACO
 
 main :: IO ()
-main = putStrLn "main"
+main = ACO.prueba
