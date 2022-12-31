@@ -13,22 +13,20 @@
 -- An implementation of Ant Colony optimization algorithm for continuous
 -- functions.
 module Shizen.AntColony.AntColony
-  ( module Shizen.AntColony.AntColony
+  ( module Shizen.AntColony.AntColony,
   )
 where
 
+import Control.Monad.ST
 import Data.Array.Accelerate as A
 import Data.Array.Accelerate.Data.Sort.Quick
 import Data.Array.Accelerate.LLVM.Native as CPU
 import Data.Array.Accelerate.System.Random.MWC as R
 import Shizen.AntColony.Random
-import System.Random
 import Shizen.AntColony.Types
-import Control.Monad.ST
+import System.Random as SR
+import System.Random.MWC as RS
 
-
--- | Function which compute the pheromones. The probability is based on the rank
--- rather than in the fitness value.
 pheromones :: Double -> Acc (Vector Ant) -> Acc (Vector Double)
 pheromones evr ants =
   let n = A.length ants
@@ -44,66 +42,83 @@ pheromones evr ants =
        in -- Hardcoded: t = 0.05
           A.exp (A.negate ((rank A.** 2) A./ (2 A.* (0.05 A.** 2) A.* (k A.** 2)))) A./ (k A.* 0.05 A.* A.sqrt (2 A.* A.pi))
 
-newAnt :: StdGen -> (Exp Position -> Exp Objective) -> Double -> Boundaries -> Acc (Vector Ant) -> Acc (Vector Double) -> Acc (Vector Ant)
-newAnt gen f evr b ants distribution =
-  let probability = constant $ uniformSample gen (0, 1) :: Exp Double
-      refAnt = pickAnt probability distribution ants :: Exp Ant
-      evre = constant evr :: Exp Double
+normal :: (RandomGen a) => a -> Exp Double -> Exp Double -> Exp Double
+normal gen m sd =
+  let (g1, g2) = split gen
+      u1 = constant $ Prelude.fst $ SR.randomR (0, 1) g1 :: Exp Double
+      u2 = constant $ Prelude.fst $ SR.randomR (0, 1) g2 :: Exp Double
+      -- Box-Muller transformation: z = N(0,1)
+      z = A.sqrt (-2 * A.log u1) * A.cos (2 * A.pi * u2)
+   in -- z*sd + m = N(m,sd)
+      z * sd + m
 
+newAnt :: (RandomGen a) => a -> (Exp Position -> Exp Objective) -> Double -> Boundaries -> Acc (Vector Ant) -> Acc (Vector Double) -> Acc (Vector Ant)
+newAnt gen f evr b ants distribution =
+  let (g1, g2) = split gen
+      (g3, g4) = split g1
+      --
+      evre = constant evr :: Exp Double
+      --
+      probability = constant $ Prelude.fst $ SR.randomR (0, 1) g1 :: Exp Double
+      refAnt = pickAnt probability distribution ants :: Exp Ant
+      -- refPos = A.fst refAnt
+      --
+      -- dx = constant $ Prelude.fst $ SR.randomR (- evr, evr) g2 :: Exp Double
+      -- dy = constant $ Prelude.fst $ SR.randomR (- evr, evr) g3 :: Exp Double
+      -- dz = constant $ Prelude.fst $ SR.randomR (- evr, evr) g4 :: Exp Double
+      --
       -- Stddev
-      sdx = evre * average_d2 0 refAnt ants :: Exp Double
-      sdy = evre * average_d2 1 refAnt ants :: Exp Double
-      sdz = evre * average_d2 2 refAnt ants :: Exp Double
+      sdx = evre * averageD2 0 refAnt ants :: Exp Double
+      sdy = evre * averageD2 1 refAnt ants :: Exp Double
+      sdz = evre * averageD2 2 refAnt ants :: Exp Double
       -- Means
       mx = getx $ getPosition refAnt :: Exp Double
       my = gety $ getPosition refAnt :: Exp Double
       mz = getz $ getPosition refAnt :: Exp Double
-
-      newx = sampleG gen mx sdx :: Exp Double
-      newy = sampleG gen my sdy :: Exp Double
-      newz = sampleG gen mz sdz :: Exp Double
-      -- newx = constant 0.0
-      -- newy = constant 0.0
-      -- newz = constant 0.0
-      newPos = Position newx newy newz :: Exp Position
-   in flatten . unit $ lift (newPos, f newPos)
-   -- in flatten $ unit $ refAnt
-  where
-  -- TODO: Broken function
-  sampleG :: StdGen -> Exp Double -> Exp Double -> Exp Double
-  sampleG gen m sd = 
-    let z = constant $ gaussianSample gen 0 1
-        --
-     in z A.* sd + m
+      --
+      (g5, g6) = split g3
+      (g7, g8) = split g4
+      -- --
+      newx = normal g5 mx sdx :: Exp Double
+      newy = normal g6 my sdy :: Exp Double
+      newz = normal g7 mz sdz :: Exp Double 
+      --
+      newPos = fixBounds b $ Position newx newy newz
+      -- newPos = updatePosition b dx dy dz refPos :: Exp Position
+      newAnts = flatten . unit $ lift (newPos, f newPos) :: Acc (Vector Ant)
+   in newAnts
 
 
--- | Function which returns a random ant given the distribution and a probability.
-pickAnt :: Exp Double -> Acc (Vector Double) -> Acc (Vector Ant) -> Exp Ant
-pickAnt prob distribution ants =
-  -- We match each value of the distribution with its index and filter out
-  -- values for which the probability is less than the value of the
-  -- distribution.
-  let ipairs = A.afst $ A.filter (\(T2 _ ph) -> ph A.< prob) (indexed distribution)
-      -- We retrieve the first index that satisfies the above property
-      i = unindex1 $ A.fst $ ipairs A.!! 0
-      n = A.length ants
-      k = i A.> n A.? (n, i)
-   in ants A.!! k
-
-average_d2 ::
+-- TODO: Fix this function.
+averageD2 ::
   -- | index
-  Exp Int ->
+  Int ->
   -- | selected ant
   Exp Ant ->
   -- | ants
   Acc (Vector Ant) ->
   Exp Double
-average_d2 i a ants =
+averageD2 i a ants =
   let value = getComponent i $ getPosition a :: Exp Double
-   in the $ A.sum $ A.map (\a -> A.abs (getComponent i $ getPosition a) - value) ants
+      sums = A.sum $ compute $ A.map (\a -> A.abs (getComponent i $ getPosition a) - value) ants :: Acc (Scalar Double)
+      elems = A.fromIntegral $ A.length ants - 1 :: Exp Double
+   in the $ A.map (A./ elems) sums
+
+-- | Function which returns a random ant given the pheremones and a probability.
+pickAnt :: Exp Double -> Acc (Vector Double) -> Acc (Vector Ant) -> Exp Ant
+pickAnt prob distribution ants =
+  -- We match each value of the distribution with its index and filter out
+  -- values for which the probability is less than the value of the
+  -- distribution.
+  let ipairs = A.afst $ A.filter (\(T2 _ d) -> d A.< prob) (indexed distribution)
+      -- We retrieve the first index that satisfies the above property
+      i = unindex1 $ A.fst $ ipairs A.!! 0
+      n = A.length ants - 1
+      k = i A.> n ? (n, i)
+   in ants A.!! k
 
 -- Function that calculates the next generation of ants
-makeNewAnts :: StdGen -> Boundaries -> (Exp Position -> Exp Objective) -> ProblemType -> Int -> Double -> Acc (Vector Ant) -> Acc (Vector Ant)
+makeNewAnts :: (RandomGen a) => a -> Boundaries -> (Exp Position -> Exp Objective) -> ProblemType -> Int -> Double -> Acc (Vector Ant) -> Acc (Vector Ant)
 makeNewAnts gen b f pt c evr old =
   -- We compute the pheromones for the old ants.
   let ph = pheromones evr old
@@ -117,7 +132,7 @@ makeNewAnts gen b f pt c evr old =
       -- Loop
       loop =
         A.awhile
-          (\(T2 old newAnts) -> unit (A.length newAnts A.< varc))
+          (\(T2 _ na) -> unit $ A.length na A.< varc)
           ( \(T2 old newAnts) ->
               lift (old, newAnts A.++ newAnt gen f evr b old distribution)
           )
@@ -146,13 +161,15 @@ antColony ::
   IO (Acc (Vector Ant))
 antColony k c b pt f evr ijump maxit =
   do
-    gen <- getStdGen
     -- We start by generating the ants positions randomly and within the boundaries
-    pos <- randomArray (randomPosition b) (Z :. k) :: IO (Vector Position)
+    -- gen <- createSystemRandom
+    gen <- initStdGen
+    g2 <- createSystemRandom
+    pos <- randomArrayWith g2 (randomPosition b) (Z :. k) :: IO (Vector Position)
     let positions = A.use pos :: Acc (Vector Position)
         -- We compute the function value of each position
         objective = A.map f positions :: Acc (Vector Objective)
-        -- Now, we create and sort the ants
+
         ants = sortBy (compareAnts pt) $ A.zip positions objective :: Acc (Vector Ant)
 
         -- We embed some varibles into the type of scalar operations Exp
@@ -162,7 +179,7 @@ antColony k c b pt f evr ijump maxit =
         evaporation_rate = constant evr
         --
         -- Parameter representing the jump at the first iteration (learning rate)
-        alpha = uniformSample gen (- ijump, ijump) :: Double
+        alpha = ijump :: Double
         --
         -- Now, we create a container for the variables that are going to be updated
         -- at each iteration
@@ -181,22 +198,9 @@ antColony k c b pt f evr ijump maxit =
 
 prueba :: IO ()
 prueba = do
-  ants <- antColony 10 4 ((0, 10), (0, 10), (0, 10)) Minimization funct 0.9 1 100
+  ants <- antColony 10 4 ((0, 10), (0, 10), (0, 10)) Minimization funct 0.95 1 100
   print $ CPU.run $ unit $ ants A.!! 0
   where
     funct :: Exp Position -> Exp Objective
     funct (Position x y z) = x ** 2 + y ** 2 + z ** 2
     funct _ = 0.0
-
-testIO :: IO ()
-testIO = do
-  gen <- createSystemRandom
-  print $ uniformSample gen (0,1)
-  print $ uniformSample gen (0,1)
-  print $ uniformSample gen (0,1)
-  print $ uniformSample gen (0,1)
-  print $ gaussianSample gen 0 1
-  print $ gaussianSample gen 0 1
-  print $ gaussianSample gen 0 1
-  print $ gaussianSample gen 0 1
-  print $ gaussianSample gen 0 1

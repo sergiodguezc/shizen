@@ -103,7 +103,7 @@ getz :: Exp Position -> Exp Double
 getz (Position _ _ z) = z
 getz _ = error "error getz"
 
-getComponent :: Exp Int -> Exp Position -> Exp Double
+getComponent :: Int -> Exp Position -> Exp Double
 getComponent 0 p = getx p
 getComponent 1 p = gety p
 getComponent 2 p = getz p

@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Config
+      Data.Array.Accelerate.System.Random.SFC
       Shizen
       Shizen.AntColony.AntColony
       Shizen.AntColony.Random
