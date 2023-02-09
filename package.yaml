@@ -27,13 +27,15 @@ dependencies:
 - accelerate-llvm-native ==1.3.0.0
 - accelerate-llvm-ptx ==1.3.0.0
 - mwc-random-accelerate ==0.2.0.0
-- mwc-random==0.15.0.2
-- random==1.2.1.1
+- mtl
+- template-haskell
 - linear-accelerate ==0.7.0.0
 - containers-accelerate ==0.1.0.0
 
 library:
-  source-dirs: src
+  source-dirs: 
+    - src 
+    - lib
 
 executables:
   shizen-exe:
@@ -41,6 +43,7 @@ executables:
     source-dirs:         app
     ghc-options:
     - -threaded
+    - -Wall
     - -rtsopts
     - -with-rtsopts=-N
     - -with-rtsopts=-n2M 

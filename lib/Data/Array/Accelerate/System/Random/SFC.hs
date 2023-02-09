@@ -1,6 +1,6 @@
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveAnyClass             #-}
-{-# LANGUAGE DeriveFunctor              #-}
+-- {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -8,6 +8,7 @@
 {-# LANGUAGE RebindableSyntax           #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE GADTs #-}
 -- |
 -- Module      : Data.Array.Accelerate.System.Random.SFC
 -- Copyright   : [2020] Trevor L. McDonell
@@ -21,16 +22,22 @@
 --
 
 module Data.Array.Accelerate.System.Random.SFC (
-
-  Random, RandomT(..),
-  runRandom, evalRandom, evalRandomT,
-  Gen,
-
-  create, createWith,
-  randomVector,
-
-  Uniform(..),
-  SFC64,
+  module Data.Array.Accelerate.System.Random.SFC
+  -- Random, RandomT(..),
+  -- runRandom, evalRandom, evalRandomT,
+  -- Gen,
+  --
+  -- seed,
+  -- create,
+  -- createWith,
+  -- randomVector,
+  -- randomRVector,
+  -- randomNVector,
+  --
+  -- UniformR(..),
+  -- Normal(..),
+  -- Uniform(..),
+  -- SFC64,
 
 ) where
 
@@ -68,13 +75,15 @@ evalRandomT :: Monad m => Acc Gen -> RandomT m a -> m a
 evalRandomT gen r = evalStateT (runRandomT r) gen
 
 
-data Gen = Gen_ (Vector SFC64)
+data Gen where
+  Gen_ :: Vector SFC64 -> Gen
   deriving (Generic, Arrays)
 
 pattern Gen :: Acc (Vector SFC64) -> Acc Gen
 pattern Gen s = Pattern s
 
-data SFC a = SFC64_ a a a a
+data SFC a where
+  SFC64_ :: a -> a -> a -> a -> SFC a
   deriving (Generic, Elt)
 
 pattern SFC :: Elt a => Exp a -> Exp a -> Exp a -> Exp a -> Exp (SFC a)
@@ -109,12 +118,13 @@ sfc64 (SFC a b c counter) =
 create :: Shape sh => Exp sh -> Acc Gen
 create sh =
   let n   = shapeSize sh
-      gen = generate (I1 n) (\(I1 i) -> seed_fast (A.fromIntegral i))
+      gen = generate (I1 n) (\(I1 i) -> seedFast (A.fromIntegral i))
   in
   Gen gen
 
-seed_fast :: Exp Word64 -> Exp SFC64
-seed_fast s
+seedFast :: Exp Word64 -- ^ 
+  -> Exp SFC64
+seedFast s
   = A.snd
   $ while (\(T2 i _) -> i A.< 8)
           (\(T2 i g) -> let T2 _ g' = sfc64 g in T2 (i+1) g')
@@ -146,6 +156,39 @@ randomVector = RandomT . StateT $ \(Gen s) ->
 
 first :: (Elt a, Elt b, Elt c) => (Exp a -> Exp b) -> Exp (a, c) -> Exp (b, c)
 first f (T2 a b) = T2 (f a) b
+
+class Uniform a => Normal a where
+    normal :: Exp a -> Exp a -> Exp SFC64 -> Exp (a, SFC64)
+
+instance Normal Double where
+    normal m sd s = 
+      let (u1, g1) = unlift $ uniform s :: (Exp Double, Exp SFC64)
+          (u2, g2) = unlift $ uniform g1 :: (Exp Double, Exp SFC64)
+          -- Box-Muller transformation: z = N(0,1)
+          z = A.sqrt (-2 * A.log u1) * A.cos (2 * A.pi * u2)
+          -- z*sd + m = N(m,sd)
+        in A.lift (z * sd + m, g2)
+
+class Elt a => UniformR a where
+  uniformRange :: Exp (a, a) -> Exp SFC64 -> Exp (a, SFC64)
+
+instance UniformR Double where
+  uniformRange p s =
+    let (l, h) = unlift p :: (Exp Double, Exp Double)
+        uni = uniform s :: Exp (Double, SFC64)
+        x = A.fst uni :: Exp Double
+    in A.lift (x * l + (1 - x) * h, A.snd uni)
+
+randomRVector :: (UniformR a, Monad m) => Exp (a, a) -> RandomT m (Acc (Vector a))
+randomRVector b = RandomT . StateT $ \(Gen s) ->
+  let (r, s') = A.unzip $ A.map (uniformRange b) s
+   in return (r, Gen s')
+
+randomNVector :: (Normal a, Monad m) => Exp a -> Exp a -> RandomT m (Acc (Vector a))
+randomNVector m sd = RandomT . StateT $ \(Gen s) ->
+  let (r, s') = A.unzip $ A.map (normal m sd) s
+   in return (r, Gen s')
+
 
 -- | The class of types for which we can generate random variates. Integral
 -- variates are generated in the full range, floating point variates are in
