@@ -39,4 +39,4 @@ getObjective :: Elt p => Exp (Ant p) -> Exp R
 getObjective = A.snd
 
 class Position p b => AntPosition p b | p -> b, b -> p where
-    updatePosition :: Exp R -> Exp b -> Exp p -> Acc (Vector p) -> Acc Gen -> (Acc (Vector p), Acc Gen)
+    updatePosition :: Exp R -> Exp b -> Exp p -> Exp p -> Exp SFC64 -> Exp (p, SFC64)

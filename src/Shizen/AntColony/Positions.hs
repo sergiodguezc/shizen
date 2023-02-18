@@ -14,101 +14,123 @@ import Data.Array.Accelerate.System.Random.SFC
 
 -- R1
 instance AntPosition P1 B1 where
-  updatePosition evr b refAntPos positions gen1 =
-    -- Stddev
-    let sdx = evr * averageD2 0 refAntPos positions :: Exp Double
-        -- Means
-        mx = projection 0 refAntPos :: Exp Double
-        --
-        (xs, gen2) = runRandom gen1 (randomNVector mx sdx)
-        --
-        pos = A.map (fixBounds b) $ A.map P1 xs
-     in (pos, gen2)
+  updatePosition evr b (P1 md) (P1 std) gen =
+    let (T2 x' gen1) = normal md (evr * std) gen
+        pos = fixBounds b $ P1 x'
+    in T2 pos gen1
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 -- R2
 
 instance AntPosition P2 B2 where
-  updatePosition evr b refAntPos positions gen1 =
-    -- Stddev
-    let sdx = evr * averageD2 0 refAntPos positions :: Exp Double
-        sdy = evr * averageD2 1 refAntPos positions :: Exp Double
-        -- Means
-        mx = projection 0 refAntPos :: Exp Double
-        my = projection 1 refAntPos :: Exp Double
-        --
-        (xs, gen2) = runRandom gen1 (randomNVector mx sdx)
-        (ys, gen3) = runRandom gen2 (randomNVector my sdy)
-        --
-        pos = A.map (fixBounds b) $ A.zipWith P2 xs ys
-     in (pos, gen3)
-
+  updatePosition evr b (P2 md1 md2) (P2 std1 std2) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        pos = fixBounds b $ P2 x1' x2'
+    in T2 pos gen2
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 -- R3
 
 instance AntPosition P3 B3 where
-  updatePosition evr b refAntPos positions gen1 =
-    -- Stddev
-    let sdx = evr * averageD2 0 refAntPos positions :: Exp Double
-        sdy = evr * averageD2 1 refAntPos positions :: Exp Double
-        sdz = evr * averageD2 2 refAntPos positions :: Exp Double
-        -- Means
-        mx = projection 0 refAntPos :: Exp Double
-        my = projection 1 refAntPos :: Exp Double
-        mz = projection 2 refAntPos :: Exp Double
-        --
-        (xs, gen2) = runRandom gen1 (randomNVector mx sdx)
-        (ys, gen3) = runRandom gen2 (randomNVector my sdy)
-        (zs, gen4) = runRandom gen3 (randomNVector mz sdz)
-        --
-        pos = A.map (fixBounds b) $ A.zipWith3 P3 xs ys zs
-     in (pos, gen4)
+  updatePosition evr b (P3 md1 md2 md3) (P3 std1 std2 std3) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        pos = fixBounds b $ P3 x1' x2' x3'
+    in T2 pos gen3
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+
 
 -- R4
 
 instance AntPosition P4 B4 where
-  updatePosition evr b refAntPos ants gen1 =
-    -- Stddev
-    let sdx1 = evr * averageD2 0 refAntPos ants :: Exp Double
-        sdx2 = evr * averageD2 1 refAntPos ants :: Exp Double
-        sdx3 = evr * averageD2 2 refAntPos ants :: Exp Double
-        sdx4 = evr * averageD2 3 refAntPos ants :: Exp Double
-        -- Means
-        mx1 = projection 0 refAntPos :: Exp Double
-        mx2 = projection 1 refAntPos :: Exp Double
-        mx3 = projection 2 refAntPos :: Exp Double
-        mx4 = projection 3 refAntPos :: Exp Double
-        --
-        (x1s, gen2) = runRandom gen1 (randomNVector mx1 sdx1)
-        (x2s, gen3) = runRandom gen2 (randomNVector mx2 sdx2)
-        (x3s, gen4) = runRandom gen3 (randomNVector mx3 sdx3)
-        (x4s, gen5) = runRandom gen4 (randomNVector mx4 sdx4)
-        --
-        pos = A.map (fixBounds b) $ A.zipWith4 P4 x1s x2s x3s x4s
-     in (pos, gen5)
+  updatePosition evr b (P4 md1 md2 md3 md4) (P4 std1 std2 std3 std4) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        pos = fixBounds b $ P4 x1' x2' x3' x4'
+    in T2 pos gen4
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 
 -- R5
 
 instance AntPosition P5 B5 where
-  updatePosition evr b refAntPos ants gen1 =
-    -- Stddev
-    let sdx1 = evr * averageD2 0 refAntPos ants :: Exp Double
-        sdx2 = evr * averageD2 1 refAntPos ants :: Exp Double
-        sdx3 = evr * averageD2 2 refAntPos ants :: Exp Double
-        sdx4 = evr * averageD2 3 refAntPos ants :: Exp Double
-        sdx5 = evr * averageD2 4 refAntPos ants :: Exp Double
-        -- Means
-        mx1 = projection 0 refAntPos :: Exp Double
-        mx2 = projection 1 refAntPos :: Exp Double
-        mx3 = projection 2 refAntPos :: Exp Double
-        mx4 = projection 3 refAntPos :: Exp Double
-        mx5 = projection 4 refAntPos :: Exp Double
-        --
-        (x1s, gen2) = runRandom gen1 (randomNVector mx1 sdx1)
-        (x2s, gen3) = runRandom gen2 (randomNVector mx2 sdx2)
-        (x3s, gen4) = runRandom gen3 (randomNVector mx3 sdx3)
-        (x4s, gen5) = runRandom gen4 (randomNVector mx4 sdx4)
-        (x5s, gen6) = runRandom gen5 (randomNVector mx5 sdx5)
-        --
-        pos = A.map (fixBounds b) $ A.zipWith5 P5 x1s x2s x3s x4s x5s
-     in (pos, gen6)
+  updatePosition evr b (P5 md1 md2 md3 md4 md5) (P5 std1 std2 std3 std4 std5) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        (T2 x5' gen5) = normal md5 (evr * std5) gen
+        pos = fixBounds b $ P5 x1' x2' x3' x4' x5'
+    in T2 pos gen5
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+
+
+-- R6 
+
+instance AntPosition P6 B6 where
+  updatePosition evr b (P6 md1 md2 md3 md4 md5 md6) (P6 std1 std2 std3 std4 std5 std6) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        (T2 x5' gen5) = normal md5 (evr * std5) gen
+        (T2 x6' gen6) = normal md6 (evr * std6) gen
+        pos = fixBounds b $ P6 x1' x2' x3' x4' x5' x6'
+    in T2 pos gen6
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+
+
+-- R7
+
+instance AntPosition P7 B7 where
+  updatePosition evr b (P7 md1 md2 md3 md4 md5 md6 md7) (P7 std1 std2 std3 std4 std5 std6 std7) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        (T2 x5' gen5) = normal md5 (evr * std5) gen
+        (T2 x6' gen6) = normal md6 (evr * std6) gen
+        (T2 x7' gen7) = normal md7 (evr * std7) gen
+        pos = fixBounds b $ P7 x1' x2' x3' x4' x5' x6' x7'
+    in T2 pos gen7
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+
+-- R8
+
+instance AntPosition P8 B8 where
+  updatePosition evr b (P8 md1 md2 md3 md4 md5 md6 md7 md8) (P8 std1 std2 std3 std4 std5 std6 std7 std8) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        (T2 x5' gen5) = normal md5 (evr * std5) gen
+        (T2 x6' gen6) = normal md6 (evr * std6) gen
+        (T2 x7' gen7) = normal md7 (evr * std7) gen
+        (T2 x8' gen8) = normal md8 (evr * std8) gen
+        pos = fixBounds b $ P8 x1' x2' x3' x4' x5' x6' x7' x8'
+    in T2 pos gen8
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+
+
+
+-- R9
+
+instance AntPosition P9 B9 where
+  updatePosition evr b (P9 md1 md2 md3 md4 md5 md6 md7 md8 md9) (P9 std1 std2 std3 std4 std5 std6 std7 std8 std9) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        (T2 x5' gen5) = normal md5 (evr * std5) gen
+        (T2 x6' gen6) = normal md6 (evr * std6) gen
+        (T2 x7' gen7) = normal md7 (evr * std7) gen
+        (T2 x8' gen8) = normal md8 (evr * std8) gen
+        (T2 x9' gen9) = normal md9 (evr * std9) gen
+        pos = fixBounds b $ P9 x1' x2' x3' x4' x5' x6' x7' x8' x9'
+    in T2 pos gen9
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+  

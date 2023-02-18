@@ -28,5 +28,5 @@ class Position p b => DropPosition p b | p -> b, b -> p where
     -- Function that narrows the boundaries of a Boundaries type
     -- given a percentage of the boundaries to be removed and 
     -- a position in which the new boundaries are centered.
-    narrowBoundaries :: R -> Exp p -> Exp b -> Exp b
+    narrowBoundaries :: Exp R -> Exp p -> Exp b -> Exp b
 

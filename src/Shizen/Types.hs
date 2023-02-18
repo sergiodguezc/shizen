@@ -35,7 +35,7 @@ type ProblemType = Bool
 type Bound = (R, R)
 
 -- | Loop Container
-type Container = Acc (Scalar Int, Gen)
+type Container = Acc (Scalar (Int, R), Gen)
 
 -- | A measure of the observed performance. It may be called cost for
 -- minimization problems, or fitness for maximization problems.
@@ -56,5 +56,6 @@ class (Boundaries b, Elt p) => Position p b | p -> b, b -> p where
     pprod :: Exp p -> Exp R
     fixBounds :: Exp b -> Exp p -> Exp p
     randomPosition :: (Monad m) => Exp b -> RandomT m (Acc SFC.Gen) (Acc (Vector p))
-
-
+    prod :: Exp p -> Exp p -> Exp p
+    difference :: Exp p -> Exp p -> Exp p
+    add :: Exp p -> Exp p -> Exp p

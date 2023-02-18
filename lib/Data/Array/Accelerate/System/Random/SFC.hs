@@ -98,12 +98,8 @@ instance RNG (Exp SFC64) where
   random = RandomT $ state (unlift . uniform)
 
 
-data Gen where
-  Gen_ :: Vector SFC64 -> Gen
-  deriving (Generic, Arrays)
+type Gen = Vector SFC64
 
-pattern Gen :: Acc (Vector SFC64) -> Acc Gen
-pattern Gen s = Pattern s
 
 data SFC a where
   SFC64_ :: a -> a -> a -> a -> SFC a
@@ -143,7 +139,7 @@ create sh =
   let n   = shapeSize sh
       gen = generate (I1 n) (\(I1 i) -> seedFast (A.fromIntegral i))
   in
-  Gen gen
+  gen
 
 seedFast :: Exp Word64 -- ^ 
   -> Exp SFC64
@@ -157,7 +153,7 @@ seedFast s
 -- | Create a new generator state using the given seed vector
 --
 createWith :: Acc (Vector (Word64, Word64, Word64)) -> Acc Gen
-createWith = Gen . A.map (\(T3 a b c) -> seed a b c)
+createWith = A.map (\(T3 a b c) -> seed a b c)
 
 seed :: Exp Word64 -> Exp Word64 -> Exp Word64 -> Exp SFC64
 seed a b c
@@ -172,9 +168,9 @@ seed a b c
 -- 'createWith'.
 --
 randomVector :: (Uniform a, Monad m) => RandomT m (Acc Gen) (Acc (Vector a))
-randomVector = RandomT . StateT $ \(Gen s) ->
+randomVector = RandomT . StateT $ \s ->
   let (r, s') = A.unzip $ A.map uniform s
-   in return (r, Gen s')
+   in return (r, s')
 
 
 first :: (Elt a, Elt b, Elt c) => (Exp a -> Exp b) -> Exp (a, c) -> Exp (b, c)
@@ -203,14 +199,14 @@ instance UniformR Double where
     in A.lift (x * l + (1 - x) * h, A.snd uni)
 
 randomRVector :: (UniformR a, Monad m) => Exp (a, a) -> RandomT m (Acc Gen) (Acc (Vector a))
-randomRVector b = RandomT . StateT $ \(Gen s) ->
+randomRVector b = RandomT . StateT $ \s ->
   let (r, s') = A.unzip $ A.map (uniformRange b) s
-   in return (r, Gen s')
+   in return (r, s')
 
 randomNVector :: (Normal a, Monad m) => Exp a -> Exp a -> RandomT m (Acc Gen) (Acc (Vector a))
-randomNVector m sd = RandomT . StateT $ \(Gen s) ->
+randomNVector m sd = RandomT . StateT $ \s ->
   let (r, s') = A.unzip $ A.map (normal m sd) s
-   in return (r, Gen s')
+   in return (r, s')
 
 
 -- | The class of types for which we can generate random variates. Integral

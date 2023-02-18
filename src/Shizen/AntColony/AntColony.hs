@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -Wall #-}
+
+-- {-# OPTIONS_GHC -Wall #-}
 
 -- |
 -- Module    : Shizen.AntColony.AntColony
@@ -19,7 +20,7 @@ module Shizen.AntColony.AntColony
 where
 
 import Data.Array.Accelerate as A
-import Data.Array.Accelerate.Data.Sort.Quick
+import Data.Array.Accelerate.Data.Sort.Merge
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.AntColony.Types
 import Shizen.AntColony.Utils
@@ -43,46 +44,47 @@ pheromones n evr ants =
     gaussian n' evr' i =
       let rank = A.fromIntegral i :: Exp Double
           k = A.fromIntegral n' :: Exp Double
-       in A.exp (A.negate ((rank A.** 2) A./ (2 A.* (evr' A.** 2) A.* (k A.** 2)))) A./ (k A.* 0.005 A.* A.sqrt (2 A.* A.pi))
+       in -- Harcoded: 0.005 is the standard deviation of the gaussian
+          A.exp (A.negate ((rank A.** 2) A./ (2 A.* (evr' A.** 2) A.* (k A.** 2)))) A./ (k A.* 0.005 A.* A.sqrt (2 A.* A.pi))
 
 -- | Function that creates a new ant
 newAnt ::
   forall p b.
   AntPosition p b =>
-  Acc Gen ->
+  Exp SFC64 ->
   (Exp p -> Exp Objective) ->
-  -- Exp ProblemType ->
   Exp R ->
   Exp b ->
-  Acc (VectorAnt p) ->
-  Acc (Vector R) ->
-  (Acc (VectorAnt p), Acc Gen)
-newAnt gen f {- pt  -} evr b ants distribution =
-  -- Compute the reference ants
-  let bb = constant (0, 1) :: Exp (Double, Double)
-      (probs, gen1) = runRandom gen (randomRVector bb)
-      probability = probs A.!! 0
-      refAntPos = A.fst $ pickAnt probability distribution ants
-      ps = A.map getPosition ants
-      --
-      (positions, gen2) = updatePosition evr b refAntPos ps gen1
-      objective = A.map f positions :: Acc (Vector Objective)
-      -- Create the new ants. A new ant is created by taking the best
-      -- ant from the previous iteration and updating its position.
-      -- newAnts = A.take 1 $ sortBy (compareAnts pt) $ A.zip positions objective
-      newAnts = A.take 1 $ A.zip positions objective
-   in (newAnts, gen2)
+  Exp p ->
+  Exp p ->
+  Exp (Ant p, SFC64)
+newAnt gen f evr b refAntPos std =
+  let -- We create the new ant, using the AntPosition
+      -- function updatePosition
+      (T2 newPos gen2) = updatePosition evr b refAntPos std gen
+      -- We compute the objective function for the new ant
+      obj = f newPos
+      newAnt = T2 newPos obj
+   in T2 newAnt gen
 
 -- | Function which returns a random ant given the pheremones and a probability.
-pickAnt :: forall p b. Position p b => Exp R -> Acc (Vector R) -> Acc (VectorAnt p) -> Exp (Ant p)
-pickAnt prob distribution ants =
-  -- We match each value of the distribution with its index and filter out
-  -- values for which the probability is less than the value of the
-  -- distribution.
-  let ipairs = A.afst $ A.filter (\(T2 _ d) -> prob A.< d) (indexed distribution)
-      -- We retrieve the first index that satisfies the above property
-      i = unindex1 $ A.fst $ ipairs A.!! 0
-   in ants A.!! i
+pickAnts ::
+  forall p b.
+  AntPosition p b =>
+  Acc (Vector R) ->
+  Acc (Vector R) ->
+  Acc (VectorAnt p) ->
+  Acc (VectorAnt p)
+pickAnts randoms distribution ants =
+  -- TODO: Test
+  let c = A.length randoms
+      randomsMatrix = A.replicate (lift (Z :. c :. All)) randoms
+      -- Replicate the distribution vector 'c' times (transposed)
+      distributionMatrix = A.replicate (lift (Z :. All :. c)) distribution
+
+      matrixRD = indexed $ A.zipWith (A.<) randomsMatrix distributionMatrix
+      pickedIndex = A.fold1 (\(T2 i b1) (T2 j b2) -> b1 ? (T2 i b1, T2 j b2)) matrixRD
+   in A.map (\(T2 (I2 r _) _) -> ants A.!! r) pickedIndex
 
 -- | Performs a single step of the algorithm.
 makeNewAnts ::
@@ -107,22 +109,40 @@ makeNewAnts gen b f pt c n evr old =
   -- We compute the pheromones for the old ants.
   let ph = pheromones n evr old
       -- Accumulated sum of the probabilities
-      distribution = A.scanl1 (+) ph :: Acc (Vector Double)
+      distribution = A.scanl1 (+) ph :: Acc (Vector R)
+      -- Now, we choose 'c' ants from the old ones,
+      -- using the distribution as a probability.
+      -- We generate a random number for each ant.
+      (randoms, gen') = runRandom gen randomVector :: (Acc (Vector R), Acc Gen)
 
-      -- Loop
-      loop =
-        A.awhile
-          ( \(T2 na _) -> unit $ A.length na A.< c
-          )
-          ( \(T2 na g) ->
-              let (nant, g1) = newAnt g f {- pt  -} evr b old distribution
-                  newVars = (na A.++ nant, g1)
-               in lift newVars
-          )
-          (lift $ newAnt gen f {- pt  -} evr b old distribution)
-      newAnts = A.take n $ sortBy (compareAnts pt) (old A.++ A.afst loop)
-   in -- We return just the n best solutions
-      (newAnts, A.asnd loop)
+      pickedAnts = pickAnts randoms distribution old
+
+      -- Now, we create a vector of pairs: ant + Exp SFC64
+      -- antsGen = A.zipWith T2 pickedAnts gen'
+      -- ants = A.zipWith T2 (A.take c old) gen'
+
+      refPosMatrix = A.replicate (lift (Z :. n :. All)) (A.map getPosition pickedAnts)
+      positionMartrix = A.replicate (lift (Z :. All  :. c)) (A.map getPosition old)
+
+      distMatrix = A.transpose $ A.zipWith difference refPosMatrix positionMartrix
+
+      distVector = A.fold1 add distMatrix
+      -- TODO: Test if c or c -1
+      avDist = A.map (pmap (A./ A.fromIntegral c)) distVector 
+      -- Each projection of avDist is the average distance between the ref ant
+      -- and the other ants
+      -- Now, we have a vector with: ant + std + gen
+      avDistRefAntGen = A.zip3 pickedAnts avDist gen'
+
+      newAnts = A.map (\(T3 a std g) -> newAnt g f evr b (getPosition a) std ) avDistRefAntGen
+
+      -- Convert the new ants to a vector, and the Exp SFC64 to a Gen
+      newAnts' = A.map (\(T2 a g) -> a) newAnts
+      gen'' = A.map (\(T2 a g) -> g) newAnts :: Acc Gen
+
+      -- We sort the new ants, and take the first 'n' ants.
+      sorted = A.take n $ sortBy (compareAnts pt) (newAnts' A.++ old)
+   in (sorted, gen')
 
 -- | Function that performs the ant colony algorithm
 aco ::
@@ -147,7 +167,7 @@ aco k c b pt f evr maxit =
   do
     -- We start by creating the random generator.
     gen <- createGenerator k
-    genPos <- createGenerator 1
+    genPos <- createGenerator c
 
     -- Now, we embed some variables into the Exp type of scalar expressions.
 
@@ -174,7 +194,7 @@ aco k c b pt f evr maxit =
 
         -- Now, we create a container for the variables that are going to be updated
         -- at each iteration
-        container = newContainer 0 genPos :: Container
+        container = newContainer 0 evaporationRate genPos :: Container
 
         -- Algorithm loop
         loop =
