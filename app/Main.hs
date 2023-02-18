@@ -75,7 +75,7 @@ evaporationRate = 0.9
 
 -- Function with many local minima
 -- Global minimum at (x, y, z) = (0, 0, 0)
-bp3 :: Exp P9 -> Exp Objective
+bp3 :: Exp P11 -> Exp Objective
 bp3 p = psum $ pmap (\x -> x ** 2 - 10 * A.cos (2 * pi * x) + 10) p
 
 -- Archive size
@@ -87,7 +87,7 @@ na3 :: Int
 na3 = 30
 
 -- Search space
-ss3 :: B9
+ss3 :: B11
 ss3 = fromValue 40
 
 -- Number of iterations

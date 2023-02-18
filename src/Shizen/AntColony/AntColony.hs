@@ -24,7 +24,6 @@ import Data.Array.Accelerate.Data.Sort.Merge
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.AntColony.Types
 import Shizen.AntColony.Utils
-import Prelude as P
 
 -- | Pheromone update function. It depends on the index of the ant in the
 -- archive, the number of ants in the archive, and the evaporation rate.
@@ -118,8 +117,6 @@ makeNewAnts gen b f pt c n evr old =
       pickedAnts = pickAnts randoms distribution old
 
       -- Now, we create a vector of pairs: ant + Exp SFC64
-      -- antsGen = A.zipWith T2 pickedAnts gen'
-      -- ants = A.zipWith T2 (A.take c old) gen'
 
       refPosMatrix = A.replicate (lift (Z :. n :. All)) (A.map getPosition pickedAnts)
       positionMartrix = A.replicate (lift (Z :. All  :. c)) (A.map getPosition old)

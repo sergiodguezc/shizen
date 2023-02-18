@@ -25,7 +25,7 @@ instance AntPosition P1 B1 where
 instance AntPosition P2 B2 where
   updatePosition evr b (P2 md1 md2) (P2 std1 std2) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
         pos = fixBounds b $ P2 x1' x2'
     in T2 pos gen2
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -35,8 +35,8 @@ instance AntPosition P2 B2 where
 instance AntPosition P3 B3 where
   updatePosition evr b (P3 md1 md2 md3) (P3 std1 std2 std3) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
         pos = fixBounds b $ P3 x1' x2' x3'
     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -47,9 +47,9 @@ instance AntPosition P3 B3 where
 instance AntPosition P4 B4 where
   updatePosition evr b (P4 md1 md2 md3 md4) (P4 std1 std2 std3 std4) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
-        (T2 x4' gen4) = normal md4 (evr * std4) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
         pos = fixBounds b $ P4 x1' x2' x3' x4'
     in T2 pos gen4
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -60,10 +60,10 @@ instance AntPosition P4 B4 where
 instance AntPosition P5 B5 where
   updatePosition evr b (P5 md1 md2 md3 md4 md5) (P5 std1 std2 std3 std4 std5) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
-        (T2 x4' gen4) = normal md4 (evr * std4) gen
-        (T2 x5' gen5) = normal md5 (evr * std5) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
         pos = fixBounds b $ P5 x1' x2' x3' x4' x5'
     in T2 pos gen5
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -74,11 +74,11 @@ instance AntPosition P5 B5 where
 instance AntPosition P6 B6 where
   updatePosition evr b (P6 md1 md2 md3 md4 md5 md6) (P6 std1 std2 std3 std4 std5 std6) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
-        (T2 x4' gen4) = normal md4 (evr * std4) gen
-        (T2 x5' gen5) = normal md5 (evr * std5) gen
-        (T2 x6' gen6) = normal md6 (evr * std6) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
+        (T2 x6' gen6) = normal md6 (evr * std6) gen5
         pos = fixBounds b $ P6 x1' x2' x3' x4' x5' x6'
     in T2 pos gen6
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -89,12 +89,12 @@ instance AntPosition P6 B6 where
 instance AntPosition P7 B7 where
   updatePosition evr b (P7 md1 md2 md3 md4 md5 md6 md7) (P7 std1 std2 std3 std4 std5 std6 std7) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
-        (T2 x4' gen4) = normal md4 (evr * std4) gen
-        (T2 x5' gen5) = normal md5 (evr * std5) gen
-        (T2 x6' gen6) = normal md6 (evr * std6) gen
-        (T2 x7' gen7) = normal md7 (evr * std7) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
+        (T2 x6' gen6) = normal md6 (evr * std6) gen5
+        (T2 x7' gen7) = normal md7 (evr * std7) gen6
         pos = fixBounds b $ P7 x1' x2' x3' x4' x5' x6' x7'
     in T2 pos gen7
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -104,13 +104,13 @@ instance AntPosition P7 B7 where
 instance AntPosition P8 B8 where
   updatePosition evr b (P8 md1 md2 md3 md4 md5 md6 md7 md8) (P8 std1 std2 std3 std4 std5 std6 std7 std8) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
-        (T2 x4' gen4) = normal md4 (evr * std4) gen
-        (T2 x5' gen5) = normal md5 (evr * std5) gen
-        (T2 x6' gen6) = normal md6 (evr * std6) gen
-        (T2 x7' gen7) = normal md7 (evr * std7) gen
-        (T2 x8' gen8) = normal md8 (evr * std8) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
+        (T2 x6' gen6) = normal md6 (evr * std6) gen5
+        (T2 x7' gen7) = normal md7 (evr * std7) gen6
+        (T2 x8' gen8) = normal md8 (evr * std8) gen7
         pos = fixBounds b $ P8 x1' x2' x3' x4' x5' x6' x7' x8'
     in T2 pos gen8
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
@@ -122,15 +122,48 @@ instance AntPosition P8 B8 where
 instance AntPosition P9 B9 where
   updatePosition evr b (P9 md1 md2 md3 md4 md5 md6 md7 md8 md9) (P9 std1 std2 std3 std4 std5 std6 std7 std8 std9) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1) gen
-        (T2 x2' gen2) = normal md2 (evr * std2) gen
-        (T2 x3' gen3) = normal md3 (evr * std3) gen
-        (T2 x4' gen4) = normal md4 (evr * std4) gen
-        (T2 x5' gen5) = normal md5 (evr * std5) gen
-        (T2 x6' gen6) = normal md6 (evr * std6) gen
-        (T2 x7' gen7) = normal md7 (evr * std7) gen
-        (T2 x8' gen8) = normal md8 (evr * std8) gen
-        (T2 x9' gen9) = normal md9 (evr * std9) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
+        (T2 x6' gen6) = normal md6 (evr * std6) gen5
+        (T2 x7' gen7) = normal md7 (evr * std7) gen6
+        (T2 x8' gen8) = normal md8 (evr * std8) gen7
+        (T2 x9' gen9) = normal md9 (evr * std9) gen8
         pos = fixBounds b $ P9 x1' x2' x3' x4' x5' x6' x7' x8' x9'
     in T2 pos gen9
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
   
+
+instance AntPosition P10 B10 where
+  updatePosition evr b (P10 md1 md2 md3 md4 md5 md6 md7 md8 md9 md10) (P10 std1 std2 std3 std4 std5 std6 std7 std8 std9 std10) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
+        (T2 x6' gen6) = normal md6 (evr * std6) gen5
+        (T2 x7' gen7) = normal md7 (evr * std7) gen6
+        (T2 x8' gen8) = normal md8 (evr * std8) gen7
+        (T2 x9' gen9) = normal md9 (evr * std9) gen8
+        (T2 x10' gen10) = normal md10 (evr * std10) gen9
+        pos = fixBounds b $ P10 x1' x2' x3' x4' x5' x6' x7' x8' x9' x10'
+    in T2 pos gen10
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
+
+instance AntPosition P11 B11 where
+  updatePosition evr b (P11 md1 md2 md3 md4 md5 md6 md7 md8 md9 md10 md11) (P11 std1 std2 std3 std4 std5 std6 std7 std8 std9 std10 std11) gen =
+    let (T2 x1' gen1) = normal md1 (evr * std1) gen
+        (T2 x2' gen2) = normal md2 (evr * std2) gen1
+        (T2 x3' gen3) = normal md3 (evr * std3) gen2
+        (T2 x4' gen4) = normal md4 (evr * std4) gen3
+        (T2 x5' gen5) = normal md5 (evr * std5) gen4
+        (T2 x6' gen6) = normal md6 (evr * std6) gen5
+        (T2 x7' gen7) = normal md7 (evr * std7) gen6
+        (T2 x8' gen8) = normal md8 (evr * std8) gen7
+        (T2 x9' gen9) = normal md9 (evr * std9) gen8
+        (T2 x10' gen10) = normal md10 (evr * std10) gen9
+        (T2 x11' gen11) = normal md11 (evr * std11) gen10
+        pos = fixBounds b $ P11 x1' x2' x3' x4' x5' x6' x7' x8' x9' x10' x11'
+    in T2 pos gen11
+  updatePosition _ _ _ _ _ = error "updatePosition: impossible case"

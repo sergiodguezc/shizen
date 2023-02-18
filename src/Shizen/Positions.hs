@@ -674,54 +674,153 @@ instance Boundaries B10 where
   fromValue x = B10_ (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x)
   fromBound b = B10_ b b b b b b b b b b
 
--- instance Position P10 B10 where
---   pmap f (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = P10 (f x1) (f x2) (f x3) (f x4) (f x5) (f x6) (f x7) (f x8) (f x9) (f x10)
---   pmap _ _ = error "Error: pmap"
+instance Position P10 B10 where
+  pmap f (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = P10 (f x1) (f x2) (f x3) (f x4) (f x5) (f x6) (f x7) (f x8) (f x9) (f x10)
+  pmap _ _ = error "Error: pmap"
 
---   psum (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10
---   psum _ = error "Error: psum"
+  psum (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10
+  psum _ = error "Error: psum"
 
---   pprod (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = x1 * x2 * x3 * x4 * x5 * x6 * x7 * x8 * x9 * x10
---   pprod _ = error "Error: pprod"
+  pprod (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = x1 * x2 * x3 * x4 * x5 * x6 * x7 * x8 * x9 * x10
+  pprod _ = error "Error: pprod"
 
---   projection i (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = i A.== 0 ? (x1, i A.== 1 ? (x2, i A.== 2 ? (x3, i A.== 3 ? (x4, i A.== 4 ? (x5, i A.== 5 ? (x6, i A.== 6 ? (x7, i A.== 7 ? (x8, i A.== 8 ? (x9, x10)))))))))
---   projection _ _ = error "Error: projection"
+  projection i (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) = i A.== 0 ? (x1, i A.== 1 ? (x2, i A.== 2 ? (x3, i A.== 3 ? (x4, i A.== 4 ? (x5, i A.== 5 ? (x6, i A.== 6 ? (x7, i A.== 7 ? (x8, i A.== 8 ? (x9, x10)))))))))
+  projection _ _ = error "Error: projection"
 
---   fixBounds (B10 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10) (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) =
---     let T2 minb1 maxb1 = b1
---         T2 minb2 maxb2 = b2
---         T2 minb3 maxb3 = b3
---         T2 minb4 maxb4 = b4
---         T2 minb5 maxb5 = b5
---         T2 minb6 maxb6 = b6
---         T2 minb7 maxb7 = b7
---         T2 minb8 maxb8 = b8
---         T2 minb9 maxb9 = b9
---         T2 minb10 maxb10 = b10
+  fixBounds (B10 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10) (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) =
+    let T2 minb1 maxb1 = b1
+        T2 minb2 maxb2 = b2
+        T2 minb3 maxb3 = b3
+        T2 minb4 maxb4 = b4
+        T2 minb5 maxb5 = b5
+        T2 minb6 maxb6 = b6
+        T2 minb7 maxb7 = b7
+        T2 minb8 maxb8 = b8
+        T2 minb9 maxb9 = b9
+        T2 minb10 maxb10 = b10
 
---         x1' = x1 A.< minb1 ? (minb1, x1 A.> maxb1 ? (maxb1, x1))
---         x2' = x2 A.< minb2 ? (minb2, x2 A.> maxb2 ? (maxb2, x2))
---         x3' = x3 A.< minb3 ? (minb3, x3 A.> maxb3 ? (maxb3, x3))
---         x4' = x4 A.< minb4 ? (minb4, x4 A.> maxb4 ? (maxb4, x4))
---         x5' = x5 A.< minb5 ? (minb5, x5 A.> maxb5 ? (maxb5, x5))
---         x6' = x6 A.< minb6 ? (minb6, x6 A.> maxb6 ? (maxb6, x6))
---         x7' = x7 A.< minb7 ? (minb7, x7 A.> maxb7 ? (maxb7, x7))
---         x8' = x8 A.< minb8 ? (minb8, x8 A.> maxb8 ? (maxb8, x8))
---         x9' = x9 A.< minb9 ? (minb9, x9 A.> maxb9 ? (maxb9, x9))
---         x10' = x10 A.< minb10 ? (minb10, x10 A.> maxb10 ? (maxb10, x10))
---     in P10 x1' x2' x3' x4' x5' x6' x7' x8' x9' x10'
---   fixBounds _ _ = error "Error: fixBounds"
+        x1' = x1 A.< minb1 ? (minb1, x1 A.> maxb1 ? (maxb1, x1))
+        x2' = x2 A.< minb2 ? (minb2, x2 A.> maxb2 ? (maxb2, x2))
+        x3' = x3 A.< minb3 ? (minb3, x3 A.> maxb3 ? (maxb3, x3))
+        x4' = x4 A.< minb4 ? (minb4, x4 A.> maxb4 ? (maxb4, x4))
+        x5' = x5 A.< minb5 ? (minb5, x5 A.> maxb5 ? (maxb5, x5))
+        x6' = x6 A.< minb6 ? (minb6, x6 A.> maxb6 ? (maxb6, x6))
+        x7' = x7 A.< minb7 ? (minb7, x7 A.> maxb7 ? (maxb7, x7))
+        x8' = x8 A.< minb8 ? (minb8, x8 A.> maxb8 ? (maxb8, x8))
+        x9' = x9 A.< minb9 ? (minb9, x9 A.> maxb9 ? (maxb9, x9))
+        x10' = x10 A.< minb10 ? (minb10, x10 A.> maxb10 ? (maxb10, x10))
+    in P10 x1' x2' x3' x4' x5' x6' x7' x8' x9' x10'
+  fixBounds _ _ = error "Error: fixBounds"
 
-  -- randomPosition (B10 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10) = RandomT . StateT $ \s ->
-  --   let (x1s, s1) = A.unzip $ A.map (uniformRange b1) s
-  --       (x2s, s2) = A.unzip $ A.map (uniformRange b2) s1
-  --       (x3s, s3) = A.unzip $ A.map (uniformRange b3) s2
-  --       (x4s, s4) = A.unzip $ A.map (uniformRange b4) s3
-  --       (x5s, s5) = A.unzip $ A.map (uniformRange b5) s4
-  --       (x6s, s6) = A.unzip $ A.map (uniformRange b6) s5
-  --       (x7s, s7) = A.unzip $ A.map (uniformRange b7) s6
-  --       (x8s, s8) = A.unzip $ A.map (uniformRange b8) s7
-  --       (x9s, s9) = A.unzip $ A.map (uniformRange b9) s8
-  --       (x10s, s10) = A.unzip $ A.map (uniformRange b10) s9
-  --   in return (zipWith10 P10 x1s x2s x3s x4s x5s x6s x7s x8s x9s x10s, s10)
-  -- randomPosition _ = error "Error: randomPosition"
+  randomPosition (B10 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10) = RandomT . StateT $ \s ->
+    let (x1s, s1) = A.unzip $ A.map (uniformRange b1) s
+        (x2s, s2) = A.unzip $ A.map (uniformRange b2) s1
+        (x3s, s3) = A.unzip $ A.map (uniformRange b3) s2
+        (x4s, s4) = A.unzip $ A.map (uniformRange b4) s3
+        (x5s, s5) = A.unzip $ A.map (uniformRange b5) s4
+        (x6s, s6) = A.unzip $ A.map (uniformRange b6) s5
+        (x7s, s7) = A.unzip $ A.map (uniformRange b7) s6
+        (x8s, s8) = A.unzip $ A.map (uniformRange b8) s7
+        (x9s, s9) = A.unzip $ A.map (uniformRange b9) s8
+        (x10s, s10) = A.unzip $ A.map (uniformRange b10) s9
+    in return (zipWith10 P10 x1s x2s x3s x4s x5s x6s x7s x8s x9s x10s, s10)
+  randomPosition _ = error "Error: randomPosition"
+
+  difference (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) (P10 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10) = P10 (x1 - y1) (x2 - y2) (x3 - y3) (x4 - y4) (x5 - y5) (x6 - y6) (x7 - y7) (x8 - y8) (x9 - y9) (x10 - y10)
+  difference _ _ = error "Error: difference"
+
+  prod (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) (P10 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10) = P10 (x1 * y1) (x2 * y2) (x3 * y3) (x4 * y4) (x5 * y5) (x6 * y6) (x7 * y7) (x8 * y8) (x9 * y9) (x10 * y10)
+  prod _ _ = error "Error: prod"
+
+  add (P10 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10) (P10 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10) = P10 (x1 + y1) (x2 + y2) (x3 + y3) (x4 + y4) (x5 + y5) (x6 + y6) (x7 + y7) (x8 + y8) (x9 + y9) (x10 + y10)
+  add _ _ = error "Error: sum"
+
+
+-- R11
+
+data P11 where
+  P11_ :: R -> R -> R -> R -> R -> R -> R -> R -> R -> R -> R -> P11
+  deriving (Generic, Show)
+
+instance Elt P11
+
+pattern P11 :: Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp R -> Exp P11
+pattern P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 = Pattern (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11)
+
+data B11 where
+  B11_ :: Bound -> Bound -> Bound -> Bound -> Bound -> Bound -> Bound -> Bound -> Bound -> Bound -> Bound -> B11
+  deriving (Generic, Show)
+
+instance Elt B11
+
+pattern B11 :: Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp Bound -> Exp B11
+pattern B11 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 = Pattern (b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11)
+
+instance Boundaries B11 where
+  fromValue x = B11_ (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x) (-x, x)  (-x, x)
+  fromBound b = B11_ b b b b b b b b b b b
+
+instance Position P11 B11 where
+  pmap f (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) = P11 (f x1) (f x2) (f x3) (f x4) (f x5) (f x6) (f x7) (f x8) (f x9) (f x10) (f x11)
+  pmap _ _ = error "Error: pmap"
+
+  psum (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) = x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10 + x11
+  psum _ = error "Error: psum"
+
+  pprod (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) = x1 * x2 * x3 * x4 * x5 * x6 * x7 * x8 * x9 * x10 * x11
+  pprod _ = error "Error: pprod"
+
+  projection i (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) = i A.== 0 ? (x1, i A.== 1 ? (x2, i A.== 2 ? (x3, i A.== 3 ? (x4, i A.== 4 ? (x5, i A.== 5 ? (x6, i A.== 6 ? (x7, i A.== 7 ? (x8, i A.== 8 ? (x9, i A.== 9 ? (x10, x11))))))))))
+  projection _ _ = error "Error: projection"
+
+  randomPosition (B11 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) = RandomT . StateT $ \s0 ->
+    let (x1s, s1) = A.unzip $ A.map (uniformRange b1) s0
+        (x2s, s2) = A.unzip $ A.map (uniformRange b2) s1
+        (x3s, s3) = A.unzip $ A.map (uniformRange b3) s2
+        (x4s, s4) = A.unzip $ A.map (uniformRange b4) s3
+        (x5s, s5) = A.unzip $ A.map (uniformRange b5) s4
+        (x6s, s6) = A.unzip $ A.map (uniformRange b6) s5
+        (x7s, s7) = A.unzip $ A.map (uniformRange b7) s6
+        (x8s, s8) = A.unzip $ A.map (uniformRange b8) s7
+        (x9s, s9) = A.unzip $ A.map (uniformRange b9) s8
+        (x10s, s10) = A.unzip $ A.map (uniformRange b10) s9
+        (x11s, s11) = A.unzip $ A.map (uniformRange b11) s10
+    in return (zipWith11 P11 x1s x2s x3s x4s x5s x6s x7s x8s x9s x10s x11s, s11)
+  randomPosition _ = error "Error: randomPosition"
+
+  fixBounds (B11 b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11) (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) = 
+    let T2 minb1 maxb1 = b1
+        T2 minb2 maxb2 = b2
+        T2 minb3 maxb3 = b3
+        T2 minb4 maxb4 = b4
+        T2 minb5 maxb5 = b5
+        T2 minb6 maxb6 = b6
+        T2 minb7 maxb7 = b7
+        T2 minb8 maxb8 = b8
+        T2 minb9 maxb9 = b9
+        T2 minb10 maxb10 = b10
+        T2 minb11 maxb11 = b11
+
+        x1' = x1 A.< minb1 ? (minb1, x1 A.> maxb1 ? (maxb1, x1))
+        x2' = x2 A.< minb2 ? (minb2, x2 A.> maxb2 ? (maxb2, x2))
+        x3' = x3 A.< minb3 ? (minb3, x3 A.> maxb3 ? (maxb3, x3))
+        x4' = x4 A.< minb4 ? (minb4, x4 A.> maxb4 ? (maxb4, x4))
+        x5' = x5 A.< minb5 ? (minb5, x5 A.> maxb5 ? (maxb5, x5))
+        x6' = x6 A.< minb6 ? (minb6, x6 A.> maxb6 ? (maxb6, x6))
+        x7' = x7 A.< minb7 ? (minb7, x7 A.> maxb7 ? (maxb7, x7))
+        x8' = x8 A.< minb8 ? (minb8, x8 A.> maxb8 ? (maxb8, x8))
+        x9' = x9 A.< minb9 ? (minb9, x9 A.> maxb9 ? (maxb9, x9))
+        x10' = x10 A.< minb10 ? (minb10, x10 A.> maxb10 ? (maxb10, x10))
+        x11' = x11 A.< minb11 ? (minb11, x11 A.> maxb11 ? (maxb11, x11))
+    in P11 x1' x2' x3' x4' x5' x6' x7' x8' x9' x10' x11'
+  fixBounds _ _ = error "Error: fixBounds"
+
+
+  difference (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) (P11 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11) = P11 (x1 - y1) (x2 - y2) (x3 - y3) (x4 - y4) (x5 - y5) (x6 - y6) (x7 - y7) (x8 - y8) (x9 - y9) (x10 - y10) (x11 - y11)
+  difference _ _ = error "Error: difference"
+
+  prod (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) (P11 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11) = P11 (x1 * y1) (x2 * y2) (x3 * y3) (x4 * y4) (x5 * y5) (x6 * y6) (x7 * y7) (x8 * y8) (x9 * y9) (x10 * y10) (x11 * y11)
+  prod _ _ = error "Error: prod"
+
+  add (P11 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11) (P11 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11) = P11 (x1 + y1) (x2 + y2) (x3 + y3) (x4 + y4) (x5 + y5) (x6 + y6) (x7 + y7) (x8 + y8) (x9 + y9) (x10 + y10) (x11 + y11)
+  add _ _ = error "Error: add"
