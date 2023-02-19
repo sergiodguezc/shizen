@@ -18,25 +18,21 @@ createGenerator :: Int -> IO (Acc SFC.Gen)
 createGenerator n = createWith . use <$> MWC.randomArray MWC.uniform (Z :. n)
 
 -- | Container
-newContainer :: Exp Int -> Exp R -> Acc SFC.Gen -> Container
-newContainer it evr gen = A.lift (unit $ A.lift (it, evr), gen)
+newContainer :: Exp Int -> Acc SFC.Gen -> Container
+newContainer it gen = A.lift (unit it , gen)
 {-# INLINE newContainer #-}
 
 -- Update Container
 updateContainer :: Container -> Exp Int -> Acc SFC.Gen -> Container
 updateContainer c it gen =
   let it' = getIt c + it
-   in newContainer it' (getEvr c) gen
+   in newContainer it' gen
 {-# INLINE updateContainer #-}
 
 -- Container Getters
 getIt :: Container -> Exp Int
-getIt c = A.fst $ the $ A.afst c
+getIt c = the $ A.afst c
 {-# INLINE getIt #-}
-
-getEvr :: Container -> Exp R
-getEvr c = A.snd $ the $ A.afst c
-{-# INLINE getEvr #-}
 
 getGen :: Container -> Acc SFC.Gen
 getGen = A.asnd
@@ -129,3 +125,67 @@ zipWith13
     -> Acc (Array sh m)
     -> Acc (Array sh n)
 zipWith13 = zipWithInduction zipWith12
+
+zipWith14
+    :: (Shape sh, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i, Elt j, Elt k, Elt l, Elt m, Elt n, Elt o)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i -> Exp j -> Exp k -> Exp l -> Exp m -> Exp n -> Exp o)
+    -> Acc (Array sh a)
+    -> Acc (Array sh b)
+    -> Acc (Array sh c)
+    -> Acc (Array sh d)
+    -> Acc (Array sh e)
+    -> Acc (Array sh f)
+    -> Acc (Array sh g)
+    -> Acc (Array sh h)
+    -> Acc (Array sh i)
+    -> Acc (Array sh j)
+    -> Acc (Array sh k)
+    -> Acc (Array sh l)
+    -> Acc (Array sh m)
+    -> Acc (Array sh n)
+    -> Acc (Array sh o)
+zipWith14 = zipWithInduction zipWith13
+
+zipWith15
+    :: (Shape sh, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i, Elt j, Elt k, Elt l, Elt m, Elt n, Elt o, Elt p)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i -> Exp j -> Exp k -> Exp l -> Exp m -> Exp n -> Exp o -> Exp p)
+    -> Acc (Array sh a)
+    -> Acc (Array sh b)
+    -> Acc (Array sh c)
+    -> Acc (Array sh d)
+    -> Acc (Array sh e)
+    -> Acc (Array sh f)
+    -> Acc (Array sh g)
+    -> Acc (Array sh h)
+    -> Acc (Array sh i)
+    -> Acc (Array sh j)
+    -> Acc (Array sh k)
+    -> Acc (Array sh l)
+    -> Acc (Array sh m)
+    -> Acc (Array sh n)
+    -> Acc (Array sh o)
+    -> Acc (Array sh p)
+zipWith15 = zipWithInduction zipWith14
+
+
+zipWith16
+    :: (Shape sh, Elt a, Elt b, Elt c, Elt d, Elt e, Elt f, Elt g, Elt h, Elt i, Elt j, Elt k, Elt l, Elt m, Elt n, Elt o, Elt p, Elt q)
+    => (Exp a -> Exp b -> Exp c -> Exp d -> Exp e -> Exp f -> Exp g -> Exp h -> Exp i -> Exp j -> Exp k -> Exp l -> Exp m -> Exp n -> Exp o -> Exp p -> Exp q)
+    -> Acc (Array sh a)
+    -> Acc (Array sh b)
+    -> Acc (Array sh c)
+    -> Acc (Array sh d)
+    -> Acc (Array sh e)
+    -> Acc (Array sh f)
+    -> Acc (Array sh g)
+    -> Acc (Array sh h)
+    -> Acc (Array sh i)
+    -> Acc (Array sh j)
+    -> Acc (Array sh k)
+    -> Acc (Array sh l)
+    -> Acc (Array sh m)
+    -> Acc (Array sh n)
+    -> Acc (Array sh o)
+    -> Acc (Array sh p)
+    -> Acc (Array sh q)
+zipWith16 = zipWithInduction zipWith15

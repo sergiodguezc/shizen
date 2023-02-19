@@ -35,7 +35,7 @@ type ProblemType = Bool
 type Bound = (R, R)
 
 -- | Loop Container
-type Container = Acc (Scalar (Int, R), Gen)
+type Container = Acc (Scalar Int, Gen)
 
 -- | A measure of the observed performance. It may be called cost for
 -- minimization problems, or fitness for maximization problems.

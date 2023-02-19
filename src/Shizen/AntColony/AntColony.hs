@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
--- {-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall #-}
 
 -- |
 -- Module    : Shizen.AntColony.AntColony
@@ -63,8 +63,8 @@ newAnt gen f evr b refAntPos std =
       (T2 newPos gen2) = updatePosition evr b refAntPos std gen
       -- We compute the objective function for the new ant
       obj = f newPos
-      newAnt = T2 newPos obj
-   in T2 newAnt gen
+      newAnt' = T2 newPos obj
+   in T2 newAnt' gen2
 
 -- | Function which returns a random ant given the pheremones and a probability.
 pickAnts ::
@@ -75,7 +75,6 @@ pickAnts ::
   Acc (VectorAnt p) ->
   Acc (VectorAnt p)
 pickAnts randoms distribution ants =
-  -- TODO: Test
   let c = A.length randoms
       randomsMatrix = A.replicate (lift (Z :. c :. All)) randoms
       -- Replicate the distribution vector 'c' times (transposed)
@@ -119,27 +118,27 @@ makeNewAnts gen b f pt c n evr old =
       -- Now, we create a vector of pairs: ant + Exp SFC64
 
       refPosMatrix = A.replicate (lift (Z :. n :. All)) (A.map getPosition pickedAnts)
-      positionMartrix = A.replicate (lift (Z :. All  :. c)) (A.map getPosition old)
+      positionMartrix = A.replicate (lift (Z :. All :. c)) (A.map getPosition old)
 
       distMatrix = A.transpose $ A.zipWith difference refPosMatrix positionMartrix
 
       distVector = A.fold1 add distMatrix
-      -- TODO: Test if c or c -1
-      avDist = A.map (pmap (A./ A.fromIntegral c)) distVector 
+      avDist = A.map (pmap (A./ A.fromIntegral c)) distVector
       -- Each projection of avDist is the average distance between the ref ant
       -- and the other ants
       -- Now, we have a vector with: ant + std + gen
       avDistRefAntGen = A.zip3 pickedAnts avDist gen'
 
-      newAnts = A.map (\(T3 a std g) -> newAnt g f evr b (getPosition a) std ) avDistRefAntGen
+      newAnts = A.map (\(T3 a std g) -> newAnt g f evr b (getPosition a) std) avDistRefAntGen
 
       -- Convert the new ants to a vector, and the Exp SFC64 to a Gen
-      newAnts' = A.map (\(T2 a g) -> a) newAnts
-      gen'' = A.map (\(T2 a g) -> g) newAnts :: Acc Gen
+      newAnts' = A.map (\(T2 a _) -> a) newAnts
+      gen'' = A.map (\(T2 _ g) -> g) newAnts :: Acc Gen
 
       -- We sort the new ants, and take the first 'n' ants.
       sorted = A.take n $ sortBy (compareAnts pt) (newAnts' A.++ old)
-   in (sorted, gen')
+   in (sorted, gen'')
+
 
 -- | Function that performs the ant colony algorithm
 aco ::
@@ -191,13 +190,13 @@ aco k c b pt f evr maxit =
 
         -- Now, we create a container for the variables that are going to be updated
         -- at each iteration
-        container = newContainer 0 evaporationRate genPos :: Container
+        container = newContainer 0 genPos :: Container
 
         -- Algorithm loop
         loop =
           A.afst $
             A.awhile
-              (\(T2 _ container') -> A.map (A.< maxite) (unit (getIt container')))
+              (\(T2 _ container') -> A.map (A.< maxite) (A.afst container'))
               ( \(T2 old container') ->
                   let gen_pos1 = getGen container'
                       (new, gen_pos2) = makeNewAnts gen_pos1 b' f pt' varc n evaporationRate old
