@@ -16,7 +16,6 @@
 module Main (main) where
 
 import Shizen.AntColony.AntColony as ACO
-import Shizen.AntColony.Positions
 import Shizen.AntColony.Types
 import Data.Array.Accelerate as A
 import qualified Data.Array.Accelerate.LLVM.Native as CPU
@@ -75,7 +74,7 @@ evaporationRate = 0.9
 
 -- Function with many local minima
 -- Global minimum at (x, y, z) = (0, 0, 0)
-bp3 :: Exp P8 -> Exp Objective
+bp3 :: Exp P21 -> Exp Objective
 bp3 p = psum $ pmap (\x -> x ** 2 - 10 * A.cos (2 * pi * x) + 10) p
 
 -- Archive size
@@ -87,12 +86,12 @@ na3 :: Int
 na3 = 20
 
 -- Search space
-ss3 :: B8
-ss3 = fromValue 40
+ss3 :: R
+ss3 = 40
 
 -- Number of iterations
 ni3 :: Int
-ni3 = 40
+ni3 = 15
 
 
 main :: IO ()
@@ -107,6 +106,6 @@ main = do
     -- putStrLn "Global minimum: (x, y) = (0, 0), f(0,0) = 0"
     -- print $ CPU.run b2
     -- putStrLn "Benchmark 3"
-    b3 <- ACO.aco as3 na3 ss3 True bp3 evaporationRate ni3
+    b3 <- ACO.aco as3 na3 (fromValue ss3) True bp3 evaporationRate ni3
     -- putStrLn "Global minimum: (x, y, z) = (0, 0, 0), f(0,0,0) = 0"
     print $ CPU.run b3

@@ -28,11 +28,8 @@ library
       Config
       Shizen
       Shizen.AntColony.AntColony
-      Shizen.AntColony.Positions
       Shizen.AntColony.Types
       Shizen.AntColony.Utils
-      Shizen.Positions
-      Shizen.RiverFormationDynamics.Positions
       Shizen.RiverFormationDynamics.RiverFormationDynamics
       Shizen.RiverFormationDynamics.Types
       Shizen.RiverFormationDynamics.Utils
