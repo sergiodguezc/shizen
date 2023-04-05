@@ -1,4 +1,7 @@
 ----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 -- |
 -- Module      :  Main
 -- Copyright   :  (c) Sergio Domínguez 2022
@@ -9,103 +12,94 @@
 -- Portability :  not portable, uses cuda
 --
 -- shizen, bio-based algorithms library
---
------------------------------------------------------------------------------
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
 module Main (main) where
 
-import Shizen.AntColony.AntColony as ACO
-import Shizen.AntColony.Types
-import Data.Array.Accelerate as A
+-- import Shizen.RiverFormationDynamics.RiverFormationDynamics as RFD
+
+-- import Data.Array.Accelerate as A
+-- import Data.Array.Accelerate.Data.Sort.MyMerge
 import qualified Data.Array.Accelerate.LLVM.Native as CPU
+import Shizen.AntColony.AntColony as ACO
+import Shizen.MultimodalFunctions
+import Shizen.Types
 
 -- Global parameters
 evaporationRate :: R
 evaporationRate = 0.9
 
--- Benchmark functions
+minimization :: Bool
+minimization = True
 
--- -- Simple function
--- -- Global minimum at x = 3
--- bp1 :: Exp P1 -> Exp Objective
--- bp1 p = x A.<= 1 ? (x**2, (x - 3)**2 -3)
---     where
---         x = projection 0 p
+-- maximization :: Bool
+-- maximization = False
 
--- -- Archive size
--- as1 :: Int
--- as1 = 10
-
--- -- New ants
--- na1 :: Int
--- na1 = 4
-
--- -- Search space
--- ss1 :: B1
--- ss1 = fromBound (0, 10)
-
--- -- Number of iterations
--- ni1 :: Int
--- ni1 = 100
-
--- --
--- -- Sphere function R2
--- --
--- -- Global minimum at (x, y) = (0, 0)
--- bp2 :: Exp P2 -> Exp Objective
--- bp2 p = psum $ pmap (** 2) p
--- --
--- -- Archive size
--- as2 :: Int
--- as2 = 10
-
--- -- New ants
--- na2 :: Int
--- na2 = 4
-
--- -- Search space
--- ss2 :: B2
--- ss2 = fromValue 10
--- --
--- -- Number of iterations
--- ni2 :: Int
--- ni2 = 250
-
--- Function with many local minima
--- Global minimum at (x, y, z) = (0, 0, 0)
-bp3 :: Exp P21 -> Exp Objective
-bp3 p = psum $ pmap (\x -> x ** 2 - 10 * A.cos (2 * pi * x) + 10) p
-
--- Archive size
-as3 :: Int
-as3 = 50
-
--- New ants
-na3 :: Int
-na3 = 20
-
--- Search space
-ss3 :: R
-ss3 = 40
-
--- Number of iterations
-ni3 :: Int
-ni3 = 15
-
+-- Individual tests
 
 main :: IO ()
 main = do
-    -- putStrLn "Ant Colony Optimization Test"
-    -- putStrLn "Benchmark 1"
-    -- b1 <- ACO.aco as1 na1 ss1 True bp1 evaporationRate ni1
-    -- putStrLn "Global minimum: x = 3, f(3) = -3"
-    -- print $ CPU.run b1
-    -- putStrLn "Benchmark 2"
-    -- b2 <- ACO.aco as2 na2 ss2 True bp2 evaporationRate ni2
-    -- putStrLn "Global minimum: (x, y) = (0, 0), f(0,0) = 0"
-    -- print $ CPU.run b2
-    -- putStrLn "Benchmark 3"
-    b3 <- ACO.aco as3 na3 (fromValue ss3) True bp3 evaporationRate ni3
-    -- putStrLn "Global minimum: (x, y, z) = (0, 0, 0), f(0,0,0) = 0"
-    print $ CPU.run b3
+  -- putStrLn "Ant Colony Optimization Test"
+  --
+  -- putStrLn "Benchmark 1"
+  test1 <- ACO.aco 2000 900 b1 minimization f1 evaporationRate 1600
+  print $ CPU.run test1
+  --
+  -- putStrLn "Benchmark 2"
+  -- test2 <- ACO.aco 50 20 b2 minimization f2 evaporationRate 20
+  -- print $ CPU.run test2
+  --
+  -- putStrLn "Benchmark 3"
+  -- test3 <- ACO.aco 50 20 b3 minimization f3 evaporationRate 20
+  -- print $ CPU.run test3
+  --
+  -- putStrLn "Benchmark 4"
+  -- test4 <- ACO.aco 50 20 b4 minimization f4 evaporationRate 20
+  -- print $ CPU.run test4
+  --
+  -- putStrLn "Benchmark 5"
+  -- test5 <- ACO.aco 50 20 b5 minimization f5 evaporationRate 20
+  -- print $ CPU.run test5
+  --
+  -- putStrLn "Benchmark 6"
+  -- test6 <- ACO.aco 50 20 b6 minimization f6 evaporationRate 20
+  -- print $ CPU.run test6
+  --
+  -- putStrLn "Benchmark 7"
+  --
+  -- putStrLn "Benchmark 8"
+  -- test8 <- ACO.aco 3500 1500 b8 minimization f8 evaporationRate 1500
+  -- print $ CPU.run test8
+  --
+  -- TEST MERGE
+  -- testMerge
+
+--
+-- putStrLn "Benchmark 9"
+-- test9 <- ACO.aco 50 20 b9 minimization f9 evaporationRate 20
+-- print $ CPU.run test9
+-- putStrLn "Benchmark 10"
+-- test10 <- ACO.aco 50 20 b10 minimization f10 evaporationRate 20
+-- print $ CPU.run test10
+-- putStrLn "Benchmark 11"
+-- test11 <- ACO.aco 50 20 b11 minimization f11 evaporationRate 20
+-- print $ CPU.run test11
+
+-- testMerge :: IO ()
+-- testMerge = do
+--   let xs = use $ A.fromList (Z :. 100) [0, 1 ..] :: Acc (Vector Int)
+--       ys = use $ A.fromList (Z :. 100) [2, 4 ..] :: Acc (Vector Int)
+--
+--       T2 loop _ =
+--         A.awhile
+--           (\(T2 _ i) -> A.map (A.< 1000) i)
+--           ( \(T2 xs' i) ->
+--               let i' = the i :: Exp Int
+--                   i'' = i' + 1
+--                   ys' = A.take i' ys :: Acc (Vector Int)
+--                   sorted = A.take 100 $ sort (xs' A.++ ys') :: Acc (Vector Int)
+--                in T2 sorted (unit i'')
+--           )
+--           (T2 xs (unit 0))
+--
+--   print $ CPU.run $ A.take 20 loop
+--   print $ CPU.run $ A.take 20 xs
+--   print $ CPU.run $ A.take 20 ys

@@ -181,8 +181,21 @@ class Uniform a => Normal a where
 
 instance Normal Double where
     normal m sd s = 
+      -- let (x, g1) = unlift $ uniform s :: (Exp Double, Exp SFC64)
       let (u1, g1) = unlift $ uniform s :: (Exp Double, Exp SFC64)
           (u2, g2) = unlift $ uniform g1 :: (Exp Double, Exp SFC64)
+
+          -- u1 = A.max (2 A.^(-63 :: Exp Int)) x 
+          -- Box-Muller transformation: z = N(0,1)
+          z = A.sqrt (-2 * A.log u1) * A.cos (2 * A.pi * u2)
+          -- z*sd + m = N(m,sd)
+        in A.lift (z * sd + m, g2)
+
+instance Normal Float where
+    normal m sd s = 
+      let (x, g1) = unlift $ uniform s :: (Exp Float, Exp SFC64)
+          (u2, g2) = unlift $ uniform g1 :: (Exp Float, Exp SFC64)
+          u1 = A.max (2 A.^(-31 :: Exp Int)) x 
           -- Box-Muller transformation: z = N(0,1)
           z = A.sqrt (-2 * A.log u1) * A.cos (2 * A.pi * u2)
           -- z*sd + m = N(m,sd)
@@ -190,6 +203,13 @@ instance Normal Double where
 
 class Elt a => UniformR a where
   uniformRange :: Exp (a, a) -> Exp SFC64 -> Exp (a, SFC64)
+
+instance UniformR Float where
+  uniformRange p s =
+    let (l, h) = unlift p :: (Exp Float, Exp Float)
+        uni = uniform s :: Exp (Float, SFC64)
+        x = A.fst uni :: Exp Float
+    in A.lift (x * l + (1 - x) * h, A.snd uni)
 
 instance UniformR Double where
   uniformRange p s =
@@ -265,30 +285,30 @@ instance (Uniform a, Uniform b) => Uniform (Either a b) where
            then first Left_  (uniform s1)
            else first Right_ (uniform s1)
 
-runQ $ do
-  let
-      tupT :: [TypeQ] -> TypeQ
-      tupT [t] = t
-      tupT tup =
-        let n = P.length tup
-         in foldl (\ts t -> [t| $ts $t |]) (tupleT n) tup
-
-
-      mkTup :: Int -> Q [Dec]
-      mkTup n =
-        let
-            xs          = [ mkName ('x':show i) | i <- [0 .. n-1] ]
-            ss          = [ mkName ('s':show i) | i <- [0 .. n]   ]
-            cst         = tupT (P.map (\x -> [t| Uniform $(varT x) |]) xs)
-            res         = tupT (P.map varT xs)
-            step x s s' = valD [p| T2 $(varP x) $(varP s') |] (normalB [| uniform $(varE s) |]) []
-            steps       = P.zipWith3 step xs ss (P.tail ss)
-            r           = [| T2 $(appsE (conE (mkName ('T':show n)) : P.map varE xs)) $(varE (last ss)) |]
-         in
-         [d| instance ($cst) => Uniform $res where
-               uniform $(varP (P.head ss)) =
-                 $(letE steps r)
-           |]
-  --
-  concat <$> mapM mkTup [2..16]
+-- runQ $ do
+--   let
+--       tupT :: [TypeQ] -> TypeQ
+--       tupT [t] = t
+--       tupT tup =
+--         let n = P.length tup
+--          in foldl (\ts t -> [t| $ts $t |]) (tupleT n) tup
+--
+--
+--       mkTup :: Int -> Q [Dec]
+--       mkTup n =
+--         let
+--             xs          = [ mkName ('x':show i) | i <- [0 .. n-1] ]
+--             ss          = [ mkName ('s':show i) | i <- [0 .. n]   ]
+--             cst         = tupT (P.map (\x -> [t| Uniform $(varT x) |]) xs)
+--             res         = tupT (P.map varT xs)
+--             step x s s' = valD [p| T2 $(varP x) $(varP s') |] (normalB [| uniform $(varE s) |]) []
+--             steps       = P.zipWith3 step xs ss (P.tail ss)
+--             r           = [| T2 $(appsE (conE (mkName ('T':show n)) : P.map varE xs)) $(varE (last ss)) |]
+--          in
+--          [d| instance ($cst) => Uniform $res where
+--                uniform $(varP (P.head ss)) =
+--                  $(letE steps r)
+--            |]
+--   --
+--   concat <$> mapM mkTup [2..16]
 

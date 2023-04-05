@@ -115,6 +115,11 @@ flags:
   llvm-hs:
     shared-llvm: true
 
+# Extra per-package and global ghc options
+# Required because Cabal-3 is a broken POS
+ghc-options:
+  llvm-hs: -optcxx=-std=c++11
+
 # Extra package databases containing global packages
 # extra-package-dbs: []
 

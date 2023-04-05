@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Shizen.AntColony.Utils
   (
     module Shizen.AntColony.Utils,
@@ -8,7 +10,8 @@ where
 import Data.Array.Accelerate as A
 import Shizen.AntColony.Types
 import Shizen.Utils
-
+import Data.Array.Accelerate.Data.Sort.MyMerge
+import Data.Array.Accelerate.Unsafe (undef)
 
 -- | Function which compares the ants. The boolean represents whether 
 -- the ordering is descending or ascending.

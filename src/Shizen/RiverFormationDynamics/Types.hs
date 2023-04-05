@@ -7,6 +7,7 @@ where
 
 import Shizen.Types
 import Data.Array.Accelerate as A
+import Data.Array.Accelerate.System.Random.SFC (Gen)
 
 -- | This type represents a solution of the optimization problem
 type Drop p = (p, R, Int)
@@ -21,7 +22,38 @@ getObjective (T3 _ o _) = o
 getNumSteps :: Elt p => Exp (Drop p) -> Exp Int
 getNumSteps (T3 _ _ n) = n
 
--- | Type synonim for a vector of drops
+decreaseNumSteps :: Elt p => Exp (Drop p) -> Exp (Drop p)
+decreaseNumSteps (T3 p o n) = T3 p o (n - 1)
+
+-- | Loop containter for the RFD algorithm
+-- We also need to store the new range factor
+type RFDContainer = Acc (Scalar R, Scalar Int, Gen)
+
+newRFDContainer :: Exp R -> Exp Int -> Acc Gen -> RFDContainer
+newRFDContainer rf it gen = A.lift (unit rf, unit it, gen)
+-- {-# INLINE newContainer #-}
+
+-- Update Container
+updateRFDContainer :: RFDContainer -> Exp R -> Exp Int -> Acc Gen -> RFDContainer
+updateRFDContainer c rf it gen =
+  let it' = getRFDIt c + it
+   in newRFDContainer rf it' gen
+-- {-# INLINE updateContainer #-}
+
+-- Container Getters
+getRFDIt :: RFDContainer -> Exp Int
+getRFDIt (T3 _ it _) = the it
+-- {-# INLINE getIt #-}
+
+getRFDGen :: RFDContainer -> Acc Gen
+getRFDGen (T3 _ _ g) = g
+-- {-# INLINE getGen #-}
+
+getRFDRangeFactor :: RFDContainer -> Exp R
+getRFDRangeFactor (T3 rf _ _) = the rf
+
+
+-- | Type synonym for a vector of drops
 type VectorDrop p = Vector (Drop p)
 
 class Position p b => DropPosition p b | p -> b, b -> p where

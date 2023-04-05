@@ -30,11 +30,14 @@ library
       Shizen.AntColony.AntColony
       Shizen.AntColony.Types
       Shizen.AntColony.Utils
+      Shizen.MultimodalFunctions
       Shizen.RiverFormationDynamics.RiverFormationDynamics
       Shizen.RiverFormationDynamics.Types
       Shizen.RiverFormationDynamics.Utils
       Shizen.Types
       Shizen.Utils
+      Data.Array.Accelerate.Data.Sort.MyMerge
+      Data.Array.Accelerate.Data.Sort.MyQuick
       Data.Array.Accelerate.System.Random.SFC
   other-modules:
       Paths_shizen
