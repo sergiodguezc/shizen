@@ -285,30 +285,29 @@ instance (Uniform a, Uniform b) => Uniform (Either a b) where
            then first Left_  (uniform s1)
            else first Right_ (uniform s1)
 
--- runQ $ do
---   let
---       tupT :: [TypeQ] -> TypeQ
---       tupT [t] = t
---       tupT tup =
---         let n = P.length tup
---          in foldl (\ts t -> [t| $ts $t |]) (tupleT n) tup
---
---
---       mkTup :: Int -> Q [Dec]
---       mkTup n =
---         let
---             xs          = [ mkName ('x':show i) | i <- [0 .. n-1] ]
---             ss          = [ mkName ('s':show i) | i <- [0 .. n]   ]
---             cst         = tupT (P.map (\x -> [t| Uniform $(varT x) |]) xs)
---             res         = tupT (P.map varT xs)
---             step x s s' = valD [p| T2 $(varP x) $(varP s') |] (normalB [| uniform $(varE s) |]) []
---             steps       = P.zipWith3 step xs ss (P.tail ss)
---             r           = [| T2 $(appsE (conE (mkName ('T':show n)) : P.map varE xs)) $(varE (last ss)) |]
---          in
---          [d| instance ($cst) => Uniform $res where
---                uniform $(varP (P.head ss)) =
---                  $(letE steps r)
---            |]
---   --
---   concat <$> mapM mkTup [2..16]
+runQ $ do
+  let
+      tupT :: [TypeQ] -> TypeQ
+      tupT [t] = t
+      tupT tup =
+        let n = P.length tup
+         in foldl (\ts t -> [t| $ts $t |]) (tupleT n) tup
+
+
+      mkTup :: Int -> Q [Dec]
+      mkTup n =
+        let
+            xs          = [ mkName ('x':show i) | i <- [0 .. n-1] ]
+            ss          = [ mkName ('s':show i) | i <- [0 .. n]   ]
+            cst         = tupT (P.map (\x -> [t| Uniform $(varT x) |]) xs)
+            res         = tupT (P.map varT xs)
+            step x s s' = valD [p| T2 $(varP x) $(varP s') |] (normalB [| uniform $(varE s) |]) []
+            steps       = P.zipWith3 step xs ss (P.tail ss)
+            r           = [| T2 $(appsE (conE (mkName ('T':show n)) : P.map varE xs)) $(varE (last ss)) |]
+         in
+         [d| instance ($cst) => Uniform $res where
+               uniform $(varP (P.head ss)) =
+                 $(letE steps r)
+           |]
+  concat <$> mapM mkTup [2..16]
 

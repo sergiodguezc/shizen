@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -50,7 +50,6 @@ library
     , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
     , containers-accelerate ==0.1.0.0
-    , linear-accelerate ==0.7.0.0
     , llvm-hs ==9.0.1
     , llvm-hs-pure ==9.0.0
     , mtl
@@ -71,7 +70,6 @@ executable shizen-exe
     , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
     , containers-accelerate ==0.1.0.0
-    , linear-accelerate ==0.7.0.0
     , llvm-hs ==9.0.1
     , llvm-hs-pure ==9.0.0
     , mtl
@@ -94,7 +92,6 @@ test-suite shizen-test
     , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
     , containers-accelerate ==0.1.0.0
-    , linear-accelerate ==0.7.0.0
     , llvm-hs ==9.0.1
     , llvm-hs-pure ==9.0.0
     , mtl

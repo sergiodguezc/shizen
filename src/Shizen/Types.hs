@@ -29,38 +29,13 @@ import Prelude as P
 
 -- | Not all compute devices support double precision. To simplify device
 -- switching, change the type R to Float.
-type R = Double
-
+type R = Float
 -- |  Optimization problem: whether the objective function
 -- has to be minimized, or maximized.
 type ProblemType = Bool
 
 -- | Data type that stores the search space bound
 type Bound = (R, R)
-
--- | Loop Container
-type Container = Acc (Scalar Int, Gen)
-
--- | Container constructor
-newContainer :: Exp Int -> Acc SFC.Gen -> Container
-newContainer it gen = A.lift (unit it, gen)
-{-# INLINE newContainer #-}
-
--- Update Container
-updateContainer :: Container -> Exp Int -> Acc SFC.Gen -> Container
-updateContainer c it gen =
-  let it' = getIt c + it
-   in newContainer it' gen
-{-# INLINE updateContainer #-}
-
--- Container Getters
-getIt :: Container -> Exp Int
-getIt c = the $ A.afst c
-{-# INLINE getIt #-}
-
-getGen :: Container -> Acc SFC.Gen
-getGen = A.asnd
-{-# INLINE getGen #-}
 
 -- | A measure of the observed performance. It may be called cost for
 -- minimization problems, or fitness for maximization problems.

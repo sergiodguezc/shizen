@@ -29,7 +29,6 @@ dependencies:
 - mwc-random-accelerate ==0.2.0.0
 - mtl
 - template-haskell
-- linear-accelerate ==0.7.0.0
 - containers-accelerate ==0.1.0.0
 
 library:

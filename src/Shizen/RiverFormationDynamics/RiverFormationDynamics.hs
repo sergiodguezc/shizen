@@ -79,21 +79,19 @@ rfd n maxSteps pt b f moveLimit rangeFactor iterations =
 
         drops = sortBy (compareDrops pt') $ A.zip3 positions objective (A.fill (I1 n') maxSteps')
 
-        container = newRFDContainer rangeFactor' 0 gen1 :: RFDContainer
 
         -- Main loop
-        loop =
-          A.afst $
+        T4 loop _ _ _ =
             A.awhile
-              (\(T2 _ container') -> A.map (A.< iterations') (unit (getRFDIt container')))
-              ( \(T2 oldDrops container') ->
-                  let gen' = getRFDGen container'
-                      rf' = getRFDRangeFactor container'
+              (\(T4 _ _ it _) -> A.map (A.< iterations') it)
+              ( \(T4 old rf it g) ->
+                  let rf' = the rf
                       ml = moveLimit' A.* rf'
-                      (newDrops, newGen, newRf) = moveDrops b' pt' ml rf' maxSteps' gen' f oldDrops
-                   in T2 newDrops (updateRFDContainer container' newRf 1 newGen)
+                      (newDrops, newGen, newRf) = moveDrops b' pt' ml rf' maxSteps' g f old
+                      it' = A.map (+ 1) it
+                   in T4 newDrops newRf it' newGen
               )
-              (T2 drops container)
+              (T4 drops (unit rangeFactor') (unit 0) gen1)
      in -- Return the best ant
         return $ A.take 1 loop
 
@@ -136,7 +134,7 @@ moveDrops ::
   (Exp p -> Exp Objective) ->
   -- | Old Drops
   Acc (VectorDrop p) ->
-  (Acc (VectorDrop p), Acc Gen, Exp R)
+  (Acc (VectorDrop p), Acc Gen, Acc (Scalar R))
 moveDrops b pt moveLimit rangeFactor maxSteps gen f drops =
   -- First, for each drop, we filter the ones that have not improved in the last (maxSteps)
   let bestDrop = drops A.!! 0
@@ -151,7 +149,7 @@ moveDrops b pt moveLimit rangeFactor maxSteps gen f drops =
 
       newBestDrop = newDrops A.!! 0
       newRangeFactor = getObjective bestDrop A.> getObjective newBestDrop ? (A.min (rangeFactor * 2) 1, rangeFactor / 2)
-   in (newDrops, gen3, newRangeFactor)
+   in (newDrops, gen3, unit newRangeFactor)
 
 moveImprovedDrops ::
   forall p b.
@@ -278,7 +276,6 @@ createNewDrops b moveLimit rangeFactor maxSteps gen f old =
              )
    in unlift condition
 
--- TODO: Add ProblemType as parameter
 computeSlopes :: Exp R -> Exp R -> Exp R
 computeSlopes delta dist = delta A.> 0 ? (delta / dist, delta A.< 0 ? (0.1 A./ A.abs (delta A./ dist) + 1, epsilon))
   where

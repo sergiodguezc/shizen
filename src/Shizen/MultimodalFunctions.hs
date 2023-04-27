@@ -11,10 +11,19 @@ import Shizen.Types
 -----------------------------------------
 -- Sphere Model
 
-f1 :: Exp P30 -> Exp R
+f1' :: Exp P5 -> Exp R
+f1' p = psum $ prod p p
+
+b1' :: B5
+b1' = fromValue 100
+
+f1min' :: R
+f1min' = 0
+
+f1 :: Exp P10 -> Exp R
 f1 p = psum $ prod p p
 
-b1 :: B30
+b1 :: B10
 b1 = fromValue 100
 
 f1min :: R

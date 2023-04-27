@@ -25,34 +25,6 @@ getNumSteps (T3 _ _ n) = n
 decreaseNumSteps :: Elt p => Exp (Drop p) -> Exp (Drop p)
 decreaseNumSteps (T3 p o n) = T3 p o (n - 1)
 
--- | Loop containter for the RFD algorithm
--- We also need to store the new range factor
-type RFDContainer = Acc (Scalar R, Scalar Int, Gen)
-
-newRFDContainer :: Exp R -> Exp Int -> Acc Gen -> RFDContainer
-newRFDContainer rf it gen = A.lift (unit rf, unit it, gen)
--- {-# INLINE newContainer #-}
-
--- Update Container
-updateRFDContainer :: RFDContainer -> Exp R -> Exp Int -> Acc Gen -> RFDContainer
-updateRFDContainer c rf it gen =
-  let it' = getRFDIt c + it
-   in newRFDContainer rf it' gen
--- {-# INLINE updateContainer #-}
-
--- Container Getters
-getRFDIt :: RFDContainer -> Exp Int
-getRFDIt (T3 _ it _) = the it
--- {-# INLINE getIt #-}
-
-getRFDGen :: RFDContainer -> Acc Gen
-getRFDGen (T3 _ _ g) = g
--- {-# INLINE getGen #-}
-
-getRFDRangeFactor :: RFDContainer -> Exp R
-getRFDRangeFactor (T3 rf _ _) = the rf
-
-
 -- | Type synonym for a vector of drops
 type VectorDrop p = Vector (Drop p)
 
