@@ -25,7 +25,7 @@ dependencies:
 - llvm-hs ==9.0.1
 - llvm-hs-pure ==9.0.0
 - accelerate-llvm-native ==1.3.0.0
-- accelerate-llvm-ptx ==1.3.0.0
+# - accelerate-llvm-ptx ==1.3.0.0
 - mwc-random-accelerate ==0.2.0.0
 - mtl
 - template-haskell

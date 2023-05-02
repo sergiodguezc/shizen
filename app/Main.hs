@@ -18,27 +18,28 @@ module Main (main) where
 
 -- import Shizen.RiverFormationDynamics.RiverFormationDynamics as RFD
 
-import Data.Array.Accelerate as A
-import Data.Array.Accelerate.Data.Sort.MyMerge
+-- import Data.Array.Accelerate as A
+-- import Data.Array.Accelerate.Data.Sort.MyMerge
 -- import Shizen.Utils
 
-import Data.Array.Accelerate.Interpreter as INT
+-- import Data.Array.Accelerate.Interpreter as INT
 import Data.Array.Accelerate.LLVM.Native as CPU
-import Data.Array.Accelerate.LLVM.PTX as GPU
-import Data.Array.Accelerate.System.Random.MWC as MWC
-import Data.Array.Accelerate.System.Random.SFC as SFC
-import Shizen.AntColony.AntColony as ACO
+-- import Data.Array.Accelerate.LLVM.PTX as GPU
+-- import Data.Array.Accelerate.System.Random.MWC as MWC
+-- import Data.Array.Accelerate.System.Random.SFC as SFC
+-- import Shizen.AntColony.AntColony as ACO
+import Shizen.ParticleSwarm.ParticleSwarm as PSO
 import Shizen.MultimodalFunctions
-import Shizen.Types
+-- import Shizen.Types
 
 -- import Data.Array.Accelerate.System.Random.SFC (randomVector, runRandom)
 
 -- Global parameters
-evaporationRate :: R
-evaporationRate = 0.9
+-- evaporationRate :: R
+-- evaporationRate = 0.9
 
-minimization :: Bool
-minimization = True
+-- minimization :: Bool
+-- minimization = True
 
 -- maximization :: Bool
 -- maximization = False
@@ -54,10 +55,10 @@ main = do
   -- putStrLn "Ant Colony Optimization Test"
   --
   -- putStrLn "Benchmark 1"
-  test1 <- ACO.aco 128 50 b1 minimization f1 evaporationRate 1000
+  -- test1 <- ACO.aco 700 350 b1' minimization f1' evaporationRate 1000
+  test1 <- PSO.pso 200 b8 f8 (-0.16) 1.89 2.12 900
   -- print test1
   print $ CPU.run test1
-  -- print $ GPU.run test1
 
 -- test1 <- RFD.rfd 20 7 minimization b1' f1' 0.9 0.9 100
 -- print $ GPU.run test1
@@ -101,33 +102,33 @@ main = do
 -- test11 <- ACO.aco 50 20 b11 minimization f11 evaporationRate 20
 -- print $ CPU.run test11
 
-test :: Int -> IO ()
-test n = do
-  g <- createWith . use <$> MWC.randomArray MWC.uniform (Z :. n)
-  let b' = fromBound (0, 1) :: B30
-      b = constant b'
-      (xs, g1) = runRandom g (randomPositions b)
-      os = A.map f xs :: Acc (Vector R)
-      xos = A.zip xs os
-      g2 = A.take 10 g1
-      T3 loop _ _ =
-        A.awhile
-          (\(T3 _ i _) -> A.map (A.< 1000) i)
-          ( \(T3 zs i g') ->
-              let -- i' = the i
-                  (ys, g'') = runRandom g' (randomPositions b)
-                  yss = A.replicate (A.lift (Z :. A.length g2 :. All)) ys
-                  ys' = A.fold1 add yss
-                  os' = A.map f ys'
-                  yos' = A.zip ys os'
-                  zs' = A.take 100 $ sortBy (\(T2 _ x) (T2 _ y) -> A.compare x y) (zs A.++ yos')
-                  j = A.map (+ 1) i :: Acc (Scalar Int)
-               in T3 zs' j g''
-          )
-          (T3 xos (unit 0) g2)
-  print $ GPU.run $ A.take 3 loop
-  where
-    -- print $ GPU.run loop
-
-    f :: forall p b. Position p b => Exp p -> Exp R
-    f p = psum $ difference p p
+-- test :: Int -> IO ()
+-- test n = do
+--   g <- createWith . use <$> MWC.randomArray MWC.uniform (Z :. n)
+--   let b' = fromBound (0, 1) :: B30
+--       b = constant b'
+--       (xs, g1) = runRandom g (randomPositions b)
+--       os = A.map f xs :: Acc (Vector R)
+--       xos = A.zip xs os
+--       g2 = A.take 10 g1
+--       T3 loop _ _ =
+--         A.awhile
+--           (\(T3 _ i _) -> A.map (A.< 1000) i)
+--           ( \(T3 zs i g') ->
+--               let -- i' = the i
+--                   (ys, g'') = runRandom g' (randomPositions b)
+--                   yss = A.replicate (A.lift (Z :. A.length g2 :. All)) ys
+--                   ys' = A.fold1 add yss
+--                   os' = A.map f ys'
+--                   yos' = A.zip ys os'
+--                   zs' = A.take 100 $ sortBy (\(T2 _ x) (T2 _ y) -> A.compare x y) (zs A.++ yos')
+--                   j = A.map (+ 1) i :: Acc (Scalar Int)
+--                in T3 zs' j g''
+--           )
+--           (T3 xos (unit 0) g2)
+--   print $ GPU.run $ A.take 3 loop
+--   where
+--     -- print $ GPU.run loop
+--
+--     f :: forall p b. Position p b => Exp p -> Exp R
+--     f p = psum $ difference p p

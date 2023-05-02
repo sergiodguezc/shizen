@@ -31,6 +31,7 @@ library
       Shizen.AntColony.Types
       Shizen.AntColony.Utils
       Shizen.MultimodalFunctions
+      Shizen.ParticleSwarm.ParticleSwarm
       Shizen.RiverFormationDynamics.RiverFormationDynamics
       Shizen.RiverFormationDynamics.Types
       Shizen.RiverFormationDynamics.Utils
@@ -47,7 +48,6 @@ library
   build-depends:
       accelerate ==1.3.0.0
     , accelerate-llvm-native ==1.3.0.0
-    , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
     , containers-accelerate ==0.1.0.0
     , llvm-hs ==9.0.1
@@ -67,7 +67,6 @@ executable shizen-exe
   build-depends:
       accelerate ==1.3.0.0
     , accelerate-llvm-native ==1.3.0.0
-    , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
     , containers-accelerate ==0.1.0.0
     , llvm-hs ==9.0.1
@@ -89,7 +88,6 @@ test-suite shizen-test
   build-depends:
       accelerate ==1.3.0.0
     , accelerate-llvm-native ==1.3.0.0
-    , accelerate-llvm-ptx ==1.3.0.0
     , base >=4.7 && <5
     , containers-accelerate ==0.1.0.0
     , llvm-hs ==9.0.1

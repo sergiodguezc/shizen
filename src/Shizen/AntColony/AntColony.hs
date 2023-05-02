@@ -22,7 +22,6 @@ import Data.Array.Accelerate.Data.Sort.MyMerge
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.AntColony.Types
 import Shizen.AntColony.Utils
--- import Data.Array.Accelerate.LLVM.PTX as GPU
 import qualified Prelude as P
 
 -- | Pheromone update function. It depends on the index of the ant in the
@@ -35,10 +34,10 @@ pheromones ::
   Acc (Vector (Ant p)) ->
   Acc (Vector R)
 pheromones n evr ants =
-  let weights = A.map (\(T2 (I1 i) _) -> gaussian n evr i) (indexed ants) :: Acc (Vector R)
-      weightsS = the $ A.sum weights
-  -- let weights = map getObjective ants :: Acc (Vector R)
-  --     weightsS = the $ sum weights
+  -- let weights = A.map (\(T2 (I1 i) _) -> gaussian n evr i) (indexed ants) :: Acc (Vector R)
+  --     weightsS = the $ A.sum weights
+  let weights = map getObjective ants :: Acc (Vector R)
+      weightsS = the $ sum weights
    in map (/ weightsS) weights :: Acc (Vector R)
     where
      gaussian :: Exp Int -> Exp R -> Exp Int -> Exp R
