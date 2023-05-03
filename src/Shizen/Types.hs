@@ -29,17 +29,13 @@ import Prelude as P
 
 -- | Not all compute devices support double precision. To simplify device
 -- switching, change the type R to Float.
-type R = Float
--- |  Optimization problem: whether the objective function
--- has to be minimized, or maximized.
-type ProblemType = Bool
+type R = Double
 
 -- | Data type that stores the search space bound
 type Bound = (R, R)
 
--- | A measure of the observed performance. It may be called cost for
--- minimization problems, or fitness for maximization problems.
-type Objective = R
+-- | Point in R^(n + 1)
+type Point p = (p, R)
 
 
 -- Function that creates a Boundaries type from a value
@@ -68,6 +64,7 @@ class (Boundaries b, Elt p) => Position p b | p -> b, b -> p where
   showContent :: p -> String
   boundariesDiameters :: Exp b -> Exp p
   toBoundaries :: Exp p -> Exp b
+  pzipWith :: (Exp R -> Exp R -> Exp R) -> Exp p -> Exp p -> Exp p
 
 
 {- Instances -}
@@ -98,6 +95,9 @@ instance Boundaries B1 where
   fromBound b = B1_ b
 
 instance Position P1 B1 where
+  pzipWith f (P1 x) (P1 y) = P1 (f x y)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P1 x) = B1 (A.lift (-x, x))
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -168,6 +168,9 @@ instance Boundaries B2 where
   fromBound b = B2_ b b
 
 instance Position P2 B2 where
+  pzipWith f (P2 x1 x2) (P2 y1 y2) = P2 (f x1 y1) (f x2 y2)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P2 x y) = B2 (A.lift (-x, x)) (A.lift (-y, y))
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -241,6 +244,9 @@ instance Boundaries B3 where
   fromBound b = B3_ b b b
 
 instance Position P3 B3 where
+  pzipWith f (P3 x1 x2 x3) (P3 y1 y2 y3) = P3 (f x1 y1) (f x2 y2) (f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P3 x y z) = B3 (A.lift (-x, x)) (A.lift (-y, y)) (A.lift (-z, z))
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -317,6 +323,9 @@ instance Boundaries B4 where
   fromBound b = B4_ b b b b
 
 instance Position P4 B4 where
+  pzipWith f (P4 x1 x2 x3 x4) (P4 y1 y2 y3 y4) = P4 (f x1 y1) (f x2 y2) (f x3 y3) (f x4 y4)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P4 x1 x2 x3 x4) = B4 (A.lift (-x1, x1)) (A.lift (-x2, x2)) (A.lift (-x3, x3)) (A.lift (-x4, x4))
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -396,6 +405,9 @@ instance Boundaries B5 where
   fromBound b = B5_ b b b b b
 
 instance Position P5 B5 where
+  pzipWith f (P5 x1 x2 x3 x4 x5) (P5 y1 y2 y3 y4 y5) = P5 (f x1 y1) (f x2 y2) (f x3 y3) (f x4 y4) (f x5 y5)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P5 x1 x2 x3 x4 x5) =
     let b1 = A.lift (-x1, x1)
         b2 = A.lift (-x2, x2)
@@ -491,6 +503,9 @@ instance Boundaries B6 where
   fromBound b = B6_ b b b b b b
 
 instance Position P6 B6 where
+  pzipWith f (P6 x1 x2 x3 x4 x5 x6) (P6 y1 y2 y3 y4 y5 y6) = P6 (f x1 y1) (f x2 y2) (f x3 y3) (f x4 y4) (f x5 y5) (f x6 y6)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P6 x1 x2 x3 x4 x5 x6) =
     let b1 = A.lift (-x1, x1)
         b2 = A.lift (-x2, x2)
@@ -583,6 +598,9 @@ instance Boundaries B7 where
   fromBound b = B7_ b b b b b b b
 
 instance Position P7 B7 where
+  pzipWith f (P7 x1 x2 x3 x4 x5 x6 x7) (P7 y1 y2 y3 y4 y5 y6 y7) = P7 (f x1 y1) (f x2 y2) (f x3 y3) (f x4 y4) (f x5 y5) (f x6 y6) (f x7 y7)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P7 x1 x2 x3 x4 x5 x6 x7) =
     let b1 = A.lift (-x1, x1)
         b2 = A.lift (-x2, x2)
@@ -687,6 +705,9 @@ instance Boundaries B8 where
   fromBound b = B8_ b b b b b b b b
 
 instance Position P8 B8 where
+  pzipWith f (P8 x1 x2 x3 x4 x5 x6 x7 x8) (P8 y1 y2 y3 y4 y5 y6 y7 y8) = P8 (f x1 y1) (f x2 y2) (f x3 y3) (f x4 y4) (f x5 y5) (f x6 y6) (f x7 y7) (f x8 y8)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P8 x1 x2 x3 x4 x5 x6 x7 x8) =
     let b1 = A.lift (-x1, x1)
         b2 = A.lift (-x2, x2)
@@ -796,6 +817,9 @@ instance Boundaries B9 where
   fromBound b = B9_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P9 B9 where
+  pzipWith f (P9 x1 x2 x3) (P9 y1 y2 y3) = P9 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P9 x1 x2 x3) = B9 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -879,6 +903,9 @@ instance Boundaries B10 where
   fromBound b = B10_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P10 B10 where
+  pzipWith f (P10 x1 x2 x3) (P10 y1 y2 y3) = P10 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P10 x1 x2 x3) = B10 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -963,6 +990,9 @@ instance Boundaries B11 where
   fromBound b = B11_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P11 B11 where
+  pzipWith f (P11 x1 x2 x3) (P11 y1 y2 y3) = P11 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P11 x1 x2 x3) = B11 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1049,6 +1079,9 @@ instance Boundaries B12 where
   fromBound b = B12_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P12 B12 where
+  pzipWith f (P12 x1 x2 x3) (P12 y1 y2 y3) = P12 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P12 x1 x2 x3) = B12 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1136,6 +1169,9 @@ instance Boundaries B13 where
   fromBound b = B13_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P13 B13 where
+  pzipWith f (P13 x1 x2 x3) (P13 y1 y2 y3) = P13 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P13 x1 x2 x3) = B13 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1224,6 +1260,9 @@ instance Boundaries B14 where
   fromBound b = B14_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P14 B14 where
+  pzipWith f (P14 x1 x2 x3) (P14 y1 y2 y3) = P14 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P14 x1 x2 x3) = B14 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1316,6 +1355,9 @@ instance Boundaries B15 where
   fromBound b = B15_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P15 B15 where
+  pzipWith f (P15 x1 x2 x3) (P15 y1 y2 y3) = P15 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P15 x1 x2 x3) = B15 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1406,6 +1448,9 @@ instance Boundaries B16 where
   fromBound b = B16_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P16 B16 where
+  pzipWith f (P16 x1 x2 x3) (P16 y1 y2 y3) = P16 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P16 x1 x2 x3) = B16 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1499,6 +1544,9 @@ instance Boundaries B17 where
   fromBound b = B17_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P17 B17 where
+  pzipWith f (P17 x1 x2 x3) (P17 y1 y2 y3) = P17 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P17 x1 x2 x3) = B17 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1590,6 +1638,9 @@ instance Boundaries B18 where
   fromBound b = B18_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P18 B18 where
+  pzipWith f (P18 x1 x2 x3) (P18 y1 y2 y3) = P18 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P18 x1 x2 x3) = B18 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1682,6 +1733,9 @@ instance Boundaries B19 where
   fromBound b = B19_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P19 B19 where
+  pzipWith f (P19 x1 x2 x3) (P19 y1 y2 y3) = P19 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P19 x1 x2 x3) = B19 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1775,6 +1829,9 @@ instance Boundaries B20 where
   fromBound b = B20_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P20 B20 where
+  pzipWith f (P20 x1 x2 x3) (P20 y1 y2 y3) = P20 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P20 x1 x2 x3) = B20 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1870,6 +1927,9 @@ instance Boundaries B21 where
   fromBound b = B21_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P21 B21 where
+  pzipWith f (P21 x1 x2 x3) (P21 y1 y2 y3) = P21 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P21 x1 x2 x3) = B21 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -1966,6 +2026,9 @@ instance Boundaries B22 where
   fromBound b = B22_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P22 B22 where
+  pzipWith f (P22 x1 x2 x3) (P22 y1 y2 y3) = P22 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P22 x1 x2 x3) = B22 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2063,6 +2126,9 @@ instance Boundaries B23 where
   fromBound b = B23_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P23 B23 where
+  pzipWith f (P23 x1 x2 x3) (P23 y1 y2 y3) = P23 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P23 x1 x2 x3) = B23 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2162,6 +2228,9 @@ instance Boundaries B24 where
   fromBound b = B24_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P24 B24 where
+  pzipWith f (P24 x1 x2 x3) (P24 y1 y2 y3) = P24 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P24 x1 x2 x3) = B24 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2262,6 +2331,9 @@ instance Boundaries B25 where
   fromBound b = B25_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P25 B25 where
+  pzipWith f (P25 x1 x2 x3) (P25 y1 y2 y3) = P25 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P25 x1 x2 x3) = B25 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2362,6 +2434,9 @@ instance Boundaries B26 where
   fromBound b = B26_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P26 B26 where
+  pzipWith f (P26 x1 x2 x3) (P26 y1 y2 y3) = P26 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P26 x1 x2 x3) = B26 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2463,6 +2538,9 @@ instance Boundaries B27 where
   fromBound b = B27_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P27 B27 where
+  pzipWith f (P27 x1 x2 x3) (P27 y1 y2 y3) = P27 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P27 x1 x2 x3) = B27 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2565,6 +2643,9 @@ instance Boundaries B28 where
   fromBound b = B28_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P28 B28 where
+  pzipWith f (P28 x1 x2 x3) (P28 y1 y2 y3) = P28 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P28 x1 x2 x3) = B28 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2668,6 +2749,9 @@ instance Boundaries B29 where
   fromBound b = B29_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P29 B29 where
+  pzipWith f (P29 x1 x2 x3) (P29 y1 y2 y3) = P29 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P29 x1 x2 x3) = B29 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 
@@ -2773,6 +2857,9 @@ instance Boundaries B30 where
   fromBound b = B30_ (fromBound b) (fromBound b) (fromBound b)
 
 instance Position P30 B30 where
+  pzipWith f (P30 x1 x2 x3) (P30 y1 y2 y3) = P30 (pzipWith f x1 y1) (pzipWith f x2 y2) (pzipWith f x3 y3)
+  pzipWith _ _ _ = error "Error: pzipWith"
+
   toBoundaries (P30 x1 x2 x3) = B30 (toBoundaries x1) (toBoundaries x2) (toBoundaries x3)
   toBoundaries _ = error "Error: toBoundaries"
 

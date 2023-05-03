@@ -114,6 +114,8 @@ extra-deps:
 flags:
   llvm-hs:
     shared-llvm: true
+  accelerate-llvm-ptx:
+    nvvm: true
 
 # Extra package databases containing global packages
 # extra-package-dbs: []

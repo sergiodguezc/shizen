@@ -7,10 +7,15 @@ module Shizen.RiverFormationDynamics.RiverFormationDynamics
 where
 
 import Data.Array.Accelerate as A
+import qualified Prelude as P
+import Data.Function
 import Data.Array.Accelerate.Data.Sort.Quick (sortBy)
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.RiverFormationDynamics.Types
-import Shizen.RiverFormationDynamics.Utils
+import Shizen.Utils
+
+snd3 :: (Elt a, Elt b, Elt c) => Exp (a, b, c) -> Exp b
+snd3 (T3 _ x _) = x
 
 -- | This function assigns each Drop a probability depending on its fitness.
 assignProbability ::
@@ -24,16 +29,16 @@ assignProbability ::
   Acc (VectorDrop p) ->
   Acc (Vector R)
 assignProbability n moveLimit drops =
-  let weights = A.map (\(T2 i _) -> gaussian n moveLimit (unindex1 i)) (indexed drops) :: Acc (Vector R)
-      weightsS = the $ A.sum weights
-   in A.map (A./ weightsS) weights :: Acc (Vector R)
+  let weights = map (\(T2 i _) -> gaussian n moveLimit (unindex1 i)) (indexed drops) :: Acc (Vector R)
+      weightsS = the $ sum weights
+   in map (/ weightsS) weights :: Acc (Vector R)
   where
     gaussian :: Exp Int -> Exp R -> Exp Int -> Exp R
     gaussian archiveSize moveLimit' rank =
-      let rank' = A.fromIntegral rank :: Exp R
-          n' = A.fromIntegral archiveSize :: Exp R
+      let rank' = fromIntegral rank :: Exp R
+          n' = fromIntegral archiveSize :: Exp R
        in -- Harcoded: 0.005 is the standard deviation of the gaussian
-          A.exp (A.negate ((rank' A.** 2) A./ (2 A.* (moveLimit' A.** 2) A.* (n' A.** 2)))) A./ (n' A.* 0.005 A.* A.sqrt (2 A.* A.pi))
+          exp (negate ((rank' ** 2) / (2 * (moveLimit' ** 2) * (n' ** 2)))) / (n' * 0.005 * sqrt (2 * pi))
 
 
 -- | Function which performs the River Formation Dynamics algorithm for 
@@ -45,20 +50,18 @@ rfd ::
   Int ->
   -- | Number of steps a drop can be moved without improve.
   Int ->
-  -- | Minimization or maximization
-  ProblemType ->
   -- | Bounds
   b ->
   -- | Function to optimize
-  (Exp p -> Exp Objective) ->
+  (Exp p -> Exp R) ->
   -- | Value between 0 and 1 that limits the movement of the drop (learning rate)
   R ->
   -- | Range factor
   R ->
   -- | Number of iterations
   Int ->
-  IO (Acc (VectorDrop p))
-rfd n maxSteps pt b f moveLimit rangeFactor iterations =
+  P.IO (Acc (VectorDrop p))
+rfd n maxSteps b f moveLimit rangeFactor iterations =
   do
     -- We start by creating the random generator.
     gen <- createGenerator n
@@ -66,7 +69,6 @@ rfd n maxSteps pt b f moveLimit rangeFactor iterations =
     -- Now, we embed some variables into the Exp type of scalar expressions.
     let n' = constant n :: Exp Int
         maxSteps' = constant maxSteps :: Exp Int
-        pt' = constant pt :: Exp ProblemType
         b' = constant b
         moveLimit' = constant moveLimit :: Exp R
         rangeFactor' = constant rangeFactor :: Exp R
@@ -75,10 +77,9 @@ rfd n maxSteps pt b f moveLimit rangeFactor iterations =
         -- We generate the ants positions randomly and within the boundaries
         (positions, gen1) = runRandom gen (randomPositions b')
 
-        objective = A.map f positions :: Acc (Vector Objective)
+        objective = map f positions :: Acc (Vector R)
 
-        drops = sortBy (compareDrops pt') $ A.zip3 positions objective (A.fill (I1 n') maxSteps')
-
+        drops = sortBy (compare `on` snd3) $ zip3 positions objective (fill (I1 n') maxSteps')
 
         -- Main loop
         T4 loop _ _ _ =
@@ -87,13 +88,13 @@ rfd n maxSteps pt b f moveLimit rangeFactor iterations =
               ( \(T4 old rf it g) ->
                   let rf' = the rf
                       ml = moveLimit' A.* rf'
-                      (newDrops, newGen, newRf) = moveDrops b' pt' ml rf' maxSteps' g f old
+                      (newDrops, newGen, newRf) = moveDrops b' ml rf' maxSteps' g f old
                       it' = A.map (+ 1) it
                    in T4 newDrops newRf it' newGen
               )
               (T4 drops (unit rangeFactor') (unit 0) gen1)
      in -- Return the best ant
-        return $ A.take 1 loop
+        P.return $ A.take 1 loop
 
 pickDrops ::
   forall p b.
@@ -120,8 +121,6 @@ moveDrops ::
   DropPosition p b =>
   -- |  Bounds
   Exp b ->
-  -- | Problem type
-  Exp ProblemType ->
   -- | Percentage that limits the movement
   Exp R ->
   -- | Range factor
@@ -131,17 +130,17 @@ moveDrops ::
   -- | Random generator
   Acc Gen ->
   -- | Fitness function
-  (Exp p -> Exp Objective) ->
+  (Exp p -> Exp R) ->
   -- | Old Drops
   Acc (VectorDrop p) ->
   (Acc (VectorDrop p), Acc Gen, Acc (Scalar R))
-moveDrops b pt moveLimit rangeFactor maxSteps gen f drops =
+moveDrops b moveLimit rangeFactor maxSteps gen f drops =
   -- First, for each drop, we filter the ones that have not improved in the last (maxSteps)
   let bestDrop = drops A.!! 0
       (createdDrops, gen2) = createNewDrops b moveLimit rangeFactor maxSteps gen f drops
-      (improvedDrops, gen3) = moveImprovedDrops b pt maxSteps moveLimit gen2 f drops
+      (improvedDrops, gen3) = moveImprovedDrops b maxSteps moveLimit gen2 f drops
 
-      newDrops = sortBy (compareDrops pt) $ createdDrops A.++ improvedDrops
+      newDrops = sortBy (compare `on` snd3) $ createdDrops A.++ improvedDrops
       -- newDrops = sortBy (compareDrops pt) $ flatten (unit newBest) A.++ createdDrops A.++ improvedDrops
 
       -- Now, we update the range factor
@@ -155,14 +154,13 @@ moveImprovedDrops ::
   forall p b.
   DropPosition p b =>
   Exp b ->
-  Exp ProblemType ->
   Exp Int ->
   Exp R ->
   Acc Gen ->
-  (Exp p -> Exp Objective) ->
+  (Exp p -> Exp R) ->
   Acc (VectorDrop p) ->
   (Acc (VectorDrop p), Acc Gen)
-moveImprovedDrops b pt maxSteps moveLimit gen f old =
+moveImprovedDrops b maxSteps moveLimit gen f old =
   -- let filterImprove = A.filter (\(T2 _ d) -> getNumSteps d A.> 0) $ A.tail (indexed old)
   let filterImprove = A.filter (\(T2 _ d) -> getNumSteps d A.> 0) (indexed old)
       improveWithIndex = A.afst filterImprove
@@ -233,7 +231,7 @@ moveImprovedDrops b pt maxSteps moveLimit gen f old =
                    newObjectives = A.map f newPositions
                    newDrops = A.zip3 newPositions newObjectives (A.fill (lift (Z :. c)) maxSteps) :: Acc (VectorDrop p)
 
-                   improvedDrops = A.zipWith (\oldd newd -> compareDrops pt oldd newd A.== GT_ ? (newd, decreaseNumSteps oldd)) improve newDrops
+                   improvedDrops = A.zipWith (\oldd newd -> (compare `on` snd3) oldd newd == GT_ ? (newd, decreaseNumSteps oldd)) improve newDrops
                 in lift (improvedDrops, gen2),
                lift (improve, gen) -- Improve is an empty array
              ) ::
@@ -252,7 +250,7 @@ createNewDrops ::
   Exp R ->
   Exp Int ->
   Acc Gen ->
-  (Exp p -> Exp Objective) ->
+  (Exp p -> Exp R) ->
   Acc (VectorDrop p) ->
   (Acc (VectorDrop p), Acc Gen)
 createNewDrops b moveLimit rangeFactor maxSteps gen f old =
@@ -288,7 +286,7 @@ createRandomDrop ::
   Exp b -> -- general boundaries
   Exp SFC64 -> -- random generator
   Exp Int -> -- max steps
-  (Exp p -> Exp Objective) -> -- objective function
+  (Exp p -> Exp R) -> -- objective function
   Exp (Drop p, SFC64)
 createRandomDrop newB b g ms f =
   let (T2 newPos g1) = randomPosition newB g

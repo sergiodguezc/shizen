@@ -1,16 +1,17 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, GADTs #-}
+{-# OPTIONS_GHC -Wall #-}
 
 module Shizen.ParticleSwarm.ParticleSwarm where
 
+import Data.Array.Accelerate.LLVM.PTX as GPU
 import Data.Array.Accelerate as A
-import Data.Array.Accelerate.Data.Sort.MyMerge
 import Data.Array.Accelerate.System.Random.SFC
-import Data.Function
 import Shizen.Types
 import Shizen.Utils
 import qualified Prelude as P
 
-type Point p = (p, R)
+minimumPoint :: Elt p => Acc (Vector (Point p)) -> Acc (Scalar (Point p))
+minimumPoint = fold1 (\(T2 p1 o1) (T2 p2 o2) -> o1 < o2 ? (T2 p1 o1, T2 p2 o2))
 
 head :: Elt a => Acc (Vector a) -> Exp a
 head xs = xs ! I1 0
@@ -58,6 +59,7 @@ pso n b f w p g maxit =
         n' = constant n :: Exp Int
         -- Parameter representing search space.
         b' = constant b
+        -- PSO Parameters
         w' = constant w :: Exp R
         p' = constant p :: Exp R
         g' = constant g :: Exp R
@@ -68,17 +70,18 @@ pso n b f w p g maxit =
         (positions, gen') = runRandom gen (randomPositions b')
 
         -- We compute the function value of each position
-        objective = map f positions :: Acc (Vector Objective)
+        objective = map f positions :: Acc (Vector R)
 
-        points = sortBy (compare `on` snd) (zip positions objective)
+        points = zip positions objective
 
-        best = fill (I1 n') (head points) :: Acc (Vector (Point p))
+        bestPoint = minimumPoint points
+        best = replicate (I1 n') bestPoint :: Acc (Vector (Point p))
 
         -- Create the boundaries for the velocities
-        velb = toBoundaries $ pmap (/ 2) $ boundariesDiameters b'
+        -- velb = toBoundaries $ boundariesDiameters b'
 
         -- We generate the particles velocities randomly and within the boundaries
-        (velocities, gen'') = runRandom gen' (randomPositions velb)
+        (velocities, gen'') = runRandom gen' (randomPositions b')
 
         particles = zip4 points points best velocities :: Acc (Vector (Particle p))
 
@@ -87,7 +90,7 @@ pso n b f w p g maxit =
           A.awhile
             (\(T3 _ it _) -> map (< maxite) it)
             ( \(T3 old it gen1) ->
-                let T2 new gen2 = updateParticles old gen1 b' f w' p' g'
+                let T2 new gen2 = updateParticles n' b' f w' p' g' old gen1
                     it' = map (+ 1) it
                  in T3 new it' gen2
             )
@@ -99,21 +102,21 @@ pso n b f w p g maxit =
 updateParticles ::
   forall p b.
   Position p b =>
-  Acc (Vector (Particle p)) ->
-  Acc Gen ->
+  Exp Int ->
   Exp b ->
   (Exp p -> Exp R) ->
   Exp R ->
   Exp R ->
   Exp R ->
+  Acc (Vector (Particle p)) ->
+  Acc Gen ->
   Acc (Vector (Particle p), Gen)
-updateParticles old gen b f w p g = output
+updateParticles n b f w p g old gen = output
   where
-    n = length old
 
-    updateParticle (T4 (T2 c co) (T2 bl blo) (T2 bg bgo) v) gen =
-      let T2 rp gen' = uniform gen :: Exp (R, SFC64)
-          T2 rg gen'' = uniform gen' :: Exp (R, SFC64)
+    updateParticle (T4 (T2 c _) (T2 bl blo) (T2 bg bgo) v) gen1 =
+      let T2 rp gen2 = uniform gen1 :: Exp (R, SFC64)
+          T2 rg gen3 = uniform gen2 :: Exp (R, SFC64)
           -- v' = w*v + p*rp*(bl-c) + g*rg*(bg-c)
           newVelocity = add (add (pmap (* w) v) (pmap (\xi -> xi * rp * p) (difference bl c))) (pmap (\xi -> xi * rg * g) (difference bg c))
 
@@ -122,8 +125,8 @@ updateParticles old gen b f w p g = output
           newO = f newPos
 
           -- Update local best
-          newBl = newO < blo ? (T2 newPos newO, T2 bl blo)
-       in T2 (T4 (T2 newPos newO) newBl (T2 bg bgo) newVelocity) gen''
+          newBl' = newO < blo ? (T2 newPos newO, T2 bl blo)
+       in T2 (T4 (T2 newPos newO) newBl' (T2 bg bgo) newVelocity) gen3
 
     newParticlesGen = zipWith updateParticle old gen
 
@@ -132,10 +135,9 @@ updateParticles old gen b f w p g = output
 
     -- Now we update the global best
     newBl = map getBestLocal newParticles
-    sortedNewBl = sortBy (compare `on` snd) newBl
+    bestPoint = minimumPoint newBl
+    newBg = replicate (I1 n) bestPoint :: Acc (Vector (Point p))
 
-    newBg = fill (index1 n) (head sortedNewBl) :: Acc (Vector (Point p))
-
-    finalParticles = zipWith (\(T4 c bl bg v) bg' -> T4 c bl bg' v) newParticles newBg
+    finalParticles = zipWith (\(T4 c bl _ v) bg' -> T4 c bl bg' v) newParticles newBg
 
     output = T2 finalParticles newGen
