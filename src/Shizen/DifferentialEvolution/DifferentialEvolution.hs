@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
 
 module Shizen.DifferentialEvolution.DifferentialEvolution where
 
@@ -76,23 +76,18 @@ updatePoints ::
   Acc (Vector (Point p), Gen)
 updatePoints n old b gen f cr dw = output
   where
+    updatePoint :: forall p b. DEPosition p b => Exp (Point p) -> Acc (Vector (Point p)) -> Exp SFC64 -> Exp (Point p)
     updatePoint p ps g =
       let T4 idx1 idx2 idx3 g' = select3 n g
-          a = ps !! idx1
-          b = ps !! idx2
-          c = ps !! idx3
+          xa = ps !! idx1
+          xb = ps !! idx2
+          xc = ps !! idx3
 
-          -- Mutation:
-          newX = add c (pmap (* dw) (difference b c)) :: Exp p
-          -- Recombination
-          comb =
-            pzipWith
-              ( \x y ->
-                  let T2 x1 g1 = uniform g' :: Exp (R, SFC64)
-                   in x1 < cr ? (y, x)
-              )
-              p
-              newX
+          -- We compute the new position
+          T2 newX g'' = updatePosition cr dw b p xa xb xc g'
+          newO = f newX
+
+
        in p
 
     -- Function which selects 3 different points
