@@ -19,7 +19,7 @@ where
 
 import Data.Array.Accelerate as A
 import Data.Function
-import Data.Array.Accelerate.Data.Sort.MyMerge
+import Data.Array.Accelerate.Data.Sort.Merge
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.AntColony.Types
 import Shizen.Utils

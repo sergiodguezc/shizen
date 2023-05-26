@@ -2874,6 +2874,7 @@ instance Position P30 B30 where
   randomPosition _ _ = error "Error: randomPosition"
 
   showContent (P30_ x1 x2 x3) = showContent x1 P.++ ", " P.++ showContent x2 P.++ ", " P.++ showContent x3
+
   pmap f (P30 x1 x2 x3) = P30 (pmap f x1) (pmap f x2) (pmap f x3)
   pmap _ _ = error "Error: pmap"
 

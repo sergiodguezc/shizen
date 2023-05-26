@@ -726,12 +726,27 @@ packages:
   original:
     hackage: binary-orphans-1.0.2@sha256:ffabc984b68562f568533c87186d3baa7d2bbac89f6ea82288396b5235715905,2264
 - completed:
-    hackage: containers-accelerate-0.1.0.0@sha256:529614e579efe5255f310ea2186af0dcc9373644d4ce6f22c72e9c6903f8a6d9,1895
+    name: sfc-random-accelerate
     pantry-tree:
-      sha256: e659966f3473d2e97d773923c81444a7f5ed5679bb7bc552f9b58b2fbdf40879
-      size: 964
+      sha256: 5fb3d0a84b071b556687706d338a8757e09601dba49068fa21077164aa6f391b
+      size: 823
+    sha256: 0c2672c8aa2f0ae663d28fae1453ea4290de5861a51887d360353ab6123d97f6
+    size: 11918
+    url: https://github.com/sergiodguezc/sfc-random-accelerate/archive/f135e78.tar.gz
+    version: 0.1.0.0
   original:
-    hackage: containers-accelerate-0.1.0.0@sha256:529614e579efe5255f310ea2186af0dcc9373644d4ce6f22c72e9c6903f8a6d9,1895
+    url: https://github.com/sergiodguezc/sfc-random-accelerate/archive/f135e78.tar.gz
+- completed:
+    name: containers-accelerate
+    pantry-tree:
+      sha256: df9c0cc476ca15cede234741147141d9397615c8cc0677aa2b90004492652542
+      size: 1434
+    sha256: 950cd541b52cc490d053e2da102055432201cd278a5440e4c21d9ddfe8afcc7c
+    size: 21878
+    url: https://github.com/sergiodguezc/containers-accelerate/archive/24082431.tar.gz
+    version: 0.1.0.0
+  original:
+    url: https://github.com/sergiodguezc/containers-accelerate/archive/24082431.tar.gz
 - completed:
     hackage: hashable-accelerate-0.1.0.0@sha256:e701ad7211058567eab3254fc977a04f0ea8c7ddd24495b90aa7a89b1619f548,1214
     pantry-tree:

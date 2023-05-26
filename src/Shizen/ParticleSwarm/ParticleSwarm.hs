@@ -1,9 +1,12 @@
-{-# LANGUAGE ScopedTypeVariables, GADTs #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Shizen.ParticleSwarm.ParticleSwarm where
+module Shizen.ParticleSwarm.ParticleSwarm
+  ( module Shizen.ParticleSwarm.ParticleSwarm,
+  )
+where
 
-import Data.Array.Accelerate.LLVM.PTX as GPU
 import Data.Array.Accelerate as A
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.Types
@@ -30,7 +33,7 @@ getBestGlobal (T4 _ _ p _) = p
 getVelocity :: forall p b. Position p b => Exp (Particle p) -> Exp p
 getVelocity (T4 _ _ _ p) = p
 
--- | Function that performs the ant colony algorithm
+-- | Function that performs the particle swarm optimization
 pso ::
   forall p b.
   Position p b =>
@@ -77,7 +80,7 @@ pso n b f w p g maxit =
         bestPoint = minimumPoint points
         best = replicate (I1 n') bestPoint :: Acc (Vector (Point p))
 
-        -- Create the boundaries for the velocities
+        -- -- Create the boundaries for the velocities
         -- velb = toBoundaries $ boundariesDiameters b'
 
         -- We generate the particles velocities randomly and within the boundaries
@@ -85,12 +88,15 @@ pso n b f w p g maxit =
 
         particles = zip4 points points best velocities :: Acc (Vector (Particle p))
 
+        step :: Acc (Vector (Particle p)) -> Acc Gen -> Acc (Vector (Particle p), Gen)
+        step = updateParticles n' b' f w' p' g'
+
         -- Algorithm loop
         T3 loop _ _ =
           A.awhile
             (\(T3 _ it _) -> map (< maxite) it)
             ( \(T3 old it gen1) ->
-                let T2 new gen2 = updateParticles n' b' f w' p' g' old gen1
+                let T2 new gen2 = step old gen1
                     it' = map (+ 1) it
                  in T3 new it' gen2
             )
@@ -111,9 +117,8 @@ updateParticles ::
   Acc (Vector (Particle p)) ->
   Acc Gen ->
   Acc (Vector (Particle p), Gen)
-updateParticles n b f w p g old gen = output
+updateParticles n bound f w p g old gen = output
   where
-
     updateParticle (T4 (T2 c _) (T2 bl blo) (T2 bg bgo) v) gen1 =
       let T2 rp gen2 = uniform gen1 :: Exp (R, SFC64)
           T2 rg gen3 = uniform gen2 :: Exp (R, SFC64)
@@ -121,7 +126,7 @@ updateParticles n b f w p g old gen = output
           newVelocity = add (add (pmap (* w) v) (pmap (\xi -> xi * rp * p) (difference bl c))) (pmap (\xi -> xi * rg * g) (difference bg c))
 
           -- Compute new position
-          newPos = fixBounds b $ add c newVelocity
+          newPos = fixBounds bound $ add c newVelocity
           newO = f newPos
 
           -- Update local best

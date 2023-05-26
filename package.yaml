@@ -27,6 +27,7 @@ dependencies:
 - accelerate-llvm-native ==1.3.0.0
 - accelerate-llvm-ptx ==1.3.0.0
 - mwc-random-accelerate ==0.2.0.0
+- sfc-random-accelerate ==0.1.0.0
 - mtl
 - template-haskell
 - containers-accelerate ==0.1.0.0
@@ -34,7 +35,6 @@ dependencies:
 library:
   source-dirs: 
     - src 
-    - lib
 
 executables:
   shizen-exe:

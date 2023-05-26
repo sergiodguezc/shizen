@@ -29,6 +29,7 @@ library
       Shizen
       Shizen.AntColony.AntColony
       Shizen.AntColony.Types
+      Shizen.ArtificialBeeColony.ArtificialBeeColony
       Shizen.DifferentialEvolution.DifferentialEvolution
       Shizen.DifferentialEvolution.Types
       Shizen.MultimodalFunctions
@@ -37,14 +38,10 @@ library
       Shizen.RiverFormationDynamics.Types
       Shizen.Types
       Shizen.Utils
-      Data.Array.Accelerate.Data.Sort.MyMerge
-      Data.Array.Accelerate.Data.Sort.MyQuick
-      Data.Array.Accelerate.System.Random.SFC
   other-modules:
       Paths_shizen
   hs-source-dirs:
       src
-      lib
   build-depends:
       accelerate ==1.3.0.0
     , accelerate-llvm-native ==1.3.0.0
@@ -55,6 +52,7 @@ library
     , llvm-hs-pure ==9.0.0
     , mtl
     , mwc-random-accelerate ==0.2.0.0
+    , sfc-random-accelerate ==0.1.0.0
     , template-haskell
   default-language: Haskell2010
 
@@ -75,6 +73,7 @@ executable shizen-exe
     , llvm-hs-pure ==9.0.0
     , mtl
     , mwc-random-accelerate ==0.2.0.0
+    , sfc-random-accelerate ==0.1.0.0
     , shizen
     , template-haskell
   default-language: Haskell2010
@@ -97,6 +96,7 @@ test-suite shizen-test
     , llvm-hs-pure ==9.0.0
     , mtl
     , mwc-random-accelerate ==0.2.0.0
+    , sfc-random-accelerate ==0.1.0.0
     , shizen
     , template-haskell
   default-language: Haskell2010
