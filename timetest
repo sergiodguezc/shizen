@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Command to be executed
+command="/usr/bin/time -p stack run"
+compile="stack build"
+bench="python bench.py"
+clearscreen="clear"
+
+# Number of times to execute the command
+N=20
+
+# File to store the output
+output_file="output.txt"
+
+# Clear the output file
+> "$output_file"
+
+# Try to compile it first
+# $compile >> 
+
+# Loop N times and execute the command
+for ((i=1; i<=N; i++))
+do
+    echo "Execution $i:" >> "$output_file"
+    eval "$command" 2>&1 | head -n 2 | tee -a "$output_file"
+done
+
+
+$clearscreen
+$bench
+
