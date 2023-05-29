@@ -3,35 +3,15 @@
 {-# OPTIONS_GHC -Wall #-}
 
 module Shizen.ParticleSwarm.ParticleSwarm
-  ( module Shizen.ParticleSwarm.ParticleSwarm,
+  ( pso,
   )
 where
 
 import Data.Array.Accelerate as A
 import Data.Array.Accelerate.System.Random.SFC
-import Shizen.Types
+import Shizen.ParticleSwarm.Types
 import Shizen.Utils
 import qualified Prelude as P
-
-minimumPoint :: Elt p => Acc (Vector (Point p)) -> Acc (Scalar (Point p))
-minimumPoint = fold1 (\(T2 p1 o1) (T2 p2 o2) -> o1 < o2 ? (T2 p1 o1, T2 p2 o2))
-
-head :: Elt a => Acc (Vector a) -> Exp a
-head xs = xs ! I1 0
-
-type Particle p = (Point p, Point p, Point p, p)
-
-getCurrentPoint :: forall p b. Position p b => Exp (Particle p) -> Exp (Point p)
-getCurrentPoint (T4 p _ _ _) = p
-
-getBestLocal :: forall p b. Position p b => Exp (Particle p) -> Exp (Point p)
-getBestLocal (T4 _ p _ _) = p
-
-getBestGlobal :: forall p b. Position p b => Exp (Particle p) -> Exp (Point p)
-getBestGlobal (T4 _ _ p _) = p
-
-getVelocity :: forall p b. Position p b => Exp (Particle p) -> Exp p
-getVelocity (T4 _ _ _ p) = p
 
 -- | Function that performs the particle swarm optimization
 pso ::

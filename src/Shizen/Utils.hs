@@ -12,22 +12,24 @@ import Data.Array.Accelerate as A
 import Shizen.Types
 import Data.Array.Accelerate.System.Random.MWC as MWC
 import Data.Array.Accelerate.System.Random.SFC as SFC
+import qualified Prelude as P
 
 -- | Create random number generator. The source of entropy is given by MWC
-createGenerator :: Int -> IO (Acc SFC.Gen)
-createGenerator n = createWith . use <$> MWC.randomArray MWC.uniform (Z :. n)
+createGenerator :: Int -> P.IO (Acc SFC.Gen)
+createGenerator n = createWith . use P.<$> MWC.randomArray MWC.uniform (Z :. n)
 
--- Distance : D_n
-distance :: (Position p b) => Exp Int -> Exp p -> Exp p -> Exp R
-distance n p1 p2 =
-  let diff = difference p1 p2
-   in psum (pmap (\xi -> A.abs xi A.^ n) diff)  A.** (1 A./ A.fromIntegral n)
+-- | Map fst
+mfst :: (Elt a, Elt b) => Acc (Vector (a, b)) -> Acc (Vector a)
+mfst = map fst
 
+-- | Map snd
+msnd :: (Elt a, Elt b) => Acc (Vector (a, b)) -> Acc (Vector b)
+msnd = map snd
 
-ds :: (Position p b) => Exp R -> Exp p -> Exp p -> Exp p
-ds n p1 p2 =
-  let diff = difference p1 p2
-   in pmap (\xi -> A.abs xi A.** n) diff
+-- | Get point with minimum value
+minimumPoint :: Elt p => Acc (Vector (Point p)) -> Acc (Scalar (Point p))
+minimumPoint = fold1 (\(T2 p1 o1) (T2 p2 o2) -> o1 < o2 ? (T2 p1 o1, T2 p2 o2))
 
-d2 :: (Position p b) => Exp p -> Exp p -> Exp p
-d2 p1 p2 = let diff = difference p1 p2 in pmap (A.** 2) diff
+-- | Retrieve the first element of an array
+head :: Elt a => Acc (Vector a) -> Exp a
+head xs = xs ! I1 0

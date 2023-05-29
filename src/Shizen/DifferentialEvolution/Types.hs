@@ -8,10 +8,9 @@ module Shizen.DifferentialEvolution.Types
 where
 
 import Data.Array.Accelerate as A
--- import Data.Array.Accelerate.Data.Sort.MyMerge
 import Data.Array.Accelerate.System.Random.SFC
 import Shizen.Types
-import qualified Prelude as P
+import Prelude ()
 
 class Position p b => DEPosition p b | p -> b, b -> p where
   updatePosition :: Exp R -> Exp R -> Exp b -> Exp p -> Exp p -> Exp p -> Exp p -> Exp SFC64 -> Exp (p, SFC64)
@@ -27,7 +26,7 @@ instance DEPosition P1 B1 where
 
             newX = P1 x1
             
-        in T2 newX g
+        in T2 newX g'
 
 instance DEPosition P2 B2 where
     updatePosition cr dw bound x a b c g =

@@ -1,12 +1,14 @@
-{-# LANGUAGE ScopedTypeVariables, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wall #-}
 
-module Shizen.DifferentialEvolution.DifferentialEvolution where
+module Shizen.DifferentialEvolution.DifferentialEvolution
+  ( de,
+  )
+where
 
 import Data.Array.Accelerate as A
--- import Data.Array.Accelerate.Data.Sort.MyMerge
 import Data.Array.Accelerate.System.Random.SFC
--- import Data.Function
 import Shizen.DifferentialEvolution.Types
 import Shizen.Utils
 import qualified Prelude as P
@@ -51,8 +53,7 @@ de n b f cr dw maxit =
         -- points = sortBy (compare `on` snd) (zip positions objective)
         points = zip positions objective
 
-
-        step :: Acc (Vector (Point p)) -> Acc Gen  -> Acc (Vector (Point p), Gen)
+        step :: Acc (Vector (Point p)) -> Acc Gen -> Acc (Vector (Point p), Gen)
         step o g = updatePoints n' o b' g f cr' dw'
 
         -- Algorithm loop
@@ -69,9 +70,6 @@ de n b f cr dw maxit =
      in -- Return the best ant
         P.return output
 
-minimumPoint :: Elt p => Acc (Vector (Point p)) -> Acc (Scalar (Point p))
-minimumPoint = fold1 (\(T2 p1 o1) (T2 p2 o2) -> o1 < o2 ? (T2 p1 o1, T2 p2 o2))
-
 updatePoints ::
   forall p b.
   DEPosition p b =>
@@ -85,10 +83,8 @@ updatePoints ::
   Acc (Vector (Point p), Gen)
 updatePoints n old b gen f cr dw = output
   where
-    -- updatePoint :: forall p b. DEPosition p b => Exp (Point p) -> Acc (Vector (Point p)) -> Exp SFC64 -> Exp (Point p)
-    updatePoint ps idxp (T2 p op) g =
-      let idx = unindex1 idxp
-          T4 idx1 idx2 idx3 g' = select3 n {- idx  -}g
+    updatePoint ps (T2 p op) g =
+      let T2 (T3 idx1 idx2 idx3) g' = select3 n g
           T2 xa _ = ps !! idx1
           T2 xb _ = ps !! idx2
           T2 xc _ = ps !! idx3
@@ -101,8 +97,8 @@ updatePoints n old b gen f cr dw = output
        in lift (newP, g'') :: Exp (Point p, SFC64)
 
     -- Function which selects 3 different points
-    select3 :: Exp Int -> {- Exp Int -> -} Exp SFC64 -> Exp (Int, Int, Int, SFC64)
-    select3 k {- idx  -}g =
+    select3 :: Exp Int -> Exp SFC64 -> Exp ((Int, Int, Int), SFC64)
+    select3 k g =
       let n' = fromIntegral k :: Exp R
           T2 r1 g1 = uniform g :: Exp (R, SFC64)
           idx1 = floor $ n' * r1
@@ -110,40 +106,10 @@ updatePoints n old b gen f cr dw = output
           idx2 = floor $ n' * r2
           T2 r3 g3 = uniform g2 :: Exp (R, SFC64)
           idx3 = floor $ n' * r3
-          --
-          -- T2 r1 g1 = uniform g :: Exp (R, SFC64)
-          -- T2 idx1 g2 =
-          --   while
-          --     (\(T2 x _) -> x == idx)
-          --     ( \(T2 _ g') ->
-          --         let T2 r1' g1' = uniform g' :: Exp (R, SFC64)
-          --          in T2 (floor $ n' * r1') g1'
-          --     )
-          --     (T2 (floor $ n' * r1) g1)
-          -- --
-          -- T2 r2 g3 = uniform g2 :: Exp (R, SFC64)
-          -- T2 idx2 g4 =
-          --   while
-          --     (\(T2 x _) -> x == idx1)
-          --     ( \(T2 _ g') ->
-          --         let T2 r2' g3' = uniform g' :: Exp (R, SFC64)
-          --          in T2 (floor $ n' * r2') g3'
-          --     )
-          --     (T2 (floor $ n' * r2) g3)
-          -- --
-          -- T2 r3 g5 = uniform g4 :: Exp (R, SFC64)
-          -- T2 idx3 g6 =
-          --   while
-          --     (\(T2 x _) -> x == idx1 || x == idx2)
-          --     ( \(T2 _ g') ->
-          --         let T2 r3' g2' = uniform g' :: Exp (R, SFC64)
-          --          in T2 (floor $ n' * r3') g2'
-          --     )
-          --     (T2 (floor $ n' * r3) g5)
-       -- in T4 idx1 idx2 idx3 g6
-       in T4 idx1 idx2 idx3 g3
-    
-    newPointsGen = izipWith (updatePoint old) old gen
+       in --
+          T2 (T3 idx1 idx2 idx3) g3
+
+    newPointsGen = zipWith (updatePoint old) old gen
 
     newPoints = map fst newPointsGen
     newGen = map snd newPointsGen

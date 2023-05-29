@@ -1,24 +1,24 @@
 {-# LANGUAGE FunctionalDependencies #-}
--- |
--- Module    : Shizen.AntColony.Types
+{-# OPTIONS_GHC -Wall #-}
+
+-- Module    : Shizen.AntColony.AntColony
+-- Description : Continuous Ant Colony Optimization
 -- Copyright : (c) Sergio Domínguez
 -- License   : BSD3
---
 -- Maintainer: Sergio Domínguez <sergdoma@ucm.es>
--- Stability : provisional
+-- Stability : experimental
 -- Portability:
--- |
--- |
 --
+-- An implementation of Ant Colony optimization algorithm for continuous
+-- functions.
 module Shizen.AntColony.Types
   ( module Shizen.AntColony.Types,
-    -- Tipos básicos
-    module Shizen.Types
+    -- Reexport types
+    module Shizen.Types,
   )
 where
 
 import Data.Array.Accelerate as A
-import Control.Monad.State
 import Data.Array.Accelerate.System.Random.SFC as SFC
 import Shizen.Types
 
@@ -39,17 +39,17 @@ getObjective :: Elt p => Exp (Ant p) -> Exp R
 getObjective = A.snd
 
 class Position p b => AntPosition p b | p -> b, b -> p where
-    updatePosition :: Exp R -> Exp b -> Exp p -> Exp p -> Exp SFC64 -> Exp (p, SFC64)
+  updatePosition :: Exp R -> Exp b -> Exp p -> Exp p -> Exp SFC64 -> Exp (p, SFC64)
 
 epsilon :: Exp R
-epsilon = 1e-8
+epsilon = 1e-1
 
 -- R1
 instance AntPosition P1 B1 where
   updatePosition evr b (P1 md) (P1 std) gen =
     let (T2 x' gen1) = normal md (evr * std + epsilon) gen
         pos = fixBounds b $ P1 x'
-    in T2 pos gen1
+     in T2 pos gen1
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 -- R2
@@ -59,7 +59,7 @@ instance AntPosition P2 B2 where
     let (T2 x1' gen1) = normal md1 (evr * std1 + epsilon) gen
         (T2 x2' gen2) = normal md2 (evr * std2 + epsilon) gen1
         pos = fixBounds b $ P2 x1' x2'
-    in T2 pos gen2
+     in T2 pos gen2
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 -- R3
@@ -70,22 +70,20 @@ instance AntPosition P3 B3 where
         (T2 x2' gen2) = normal md2 (evr * std2 + epsilon) gen1
         (T2 x3' gen3) = normal md3 (evr * std3 + epsilon) gen2
         pos = fixBounds b $ P3 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 -- R4
 
 instance AntPosition P4 B4 where
   updatePosition evr b (P4 md1 md2 md3 md4) (P4 std1 std2 std3 std4) gen =
     let (T2 x1' gen1) = normal md1 (evr * std1 + epsilon) gen
-        (T2 x2' gen2) = normal md2 (evr * std2 + epsilon)  gen1
+        (T2 x2' gen2) = normal md2 (evr * std2 + epsilon) gen1
         (T2 x3' gen3) = normal md3 (evr * std3 + epsilon) gen2
         (T2 x4' gen4) = normal md4 (evr * std4 + epsilon) gen3
         pos = fixBounds b $ P4 x1' x2' x3' x4'
-    in T2 pos gen4
+     in T2 pos gen4
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 -- R5
 
@@ -97,11 +95,10 @@ instance AntPosition P5 B5 where
         (T2 x4' gen4) = normal md4 (evr * std4 + epsilon) gen3
         (T2 x5' gen5) = normal md5 (evr * std5 + epsilon) gen4
         pos = fixBounds b $ P5 x1' x2' x3' x4' x5'
-    in T2 pos gen5
+     in T2 pos gen5
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
-
--- R6 
+-- R6
 
 instance AntPosition P6 B6 where
   updatePosition evr b (P6 md1 md2 md3 md4 md5 md6) (P6 std1 std2 std3 std4 std5 std6) gen =
@@ -112,9 +109,8 @@ instance AntPosition P6 B6 where
         (T2 x5' gen5) = normal md5 (evr * std5 + epsilon) gen4
         (T2 x6' gen6) = normal md6 (evr * std6 + epsilon) gen5
         pos = fixBounds b $ P6 x1' x2' x3' x4' x5' x6'
-    in T2 pos gen6
+     in T2 pos gen6
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 -- R7
 
@@ -128,7 +124,7 @@ instance AntPosition P7 B7 where
         (T2 x6' gen6) = normal md6 (evr * std6 + epsilon) gen5
         (T2 x7' gen7) = normal md7 (evr * std7 + epsilon) gen6
         pos = fixBounds b $ P7 x1' x2' x3' x4' x5' x6' x7'
-    in T2 pos gen7
+     in T2 pos gen7
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 -- R8
@@ -144,10 +140,8 @@ instance AntPosition P8 B8 where
         (T2 x7' gen7) = normal md7 (evr * std7 + epsilon) gen6
         (T2 x8' gen8) = normal md8 (evr * std8 + epsilon) gen7
         pos = fixBounds b $ P8 x1' x2' x3' x4' x5' x6' x7' x8'
-    in T2 pos gen8
+     in T2 pos gen8
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
-
 
 -- R9
 
@@ -157,9 +151,8 @@ instance AntPosition P9 B9 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P9 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-  
 
 instance AntPosition P10 B10 where
   updatePosition evr (B10 b1 b2 b3) (P10 md1 md2 md3) (P10 std1 std2 std3) gen =
@@ -167,7 +160,7 @@ instance AntPosition P10 B10 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P10 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P11 B11 where
@@ -176,7 +169,7 @@ instance AntPosition P11 B11 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P11 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P12 B12 where
@@ -185,7 +178,7 @@ instance AntPosition P12 B12 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P12 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P13 B13 where
@@ -194,9 +187,8 @@ instance AntPosition P13 B13 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P13 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 instance AntPosition P14 B14 where
   updatePosition evr (B14 b1 b2 b3) (P14 md1 md2 md3) (P14 std1 std2 std3) gen =
@@ -204,7 +196,7 @@ instance AntPosition P14 B14 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P14 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P15 B15 where
@@ -213,9 +205,8 @@ instance AntPosition P15 B15 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P15 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 instance AntPosition P16 B16 where
   updatePosition evr (B16 b1 b2 b3) (P16 md1 md2 md3) (P16 std1 std2 std3) gen =
@@ -223,7 +214,7 @@ instance AntPosition P16 B16 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P16 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P17 B17 where
@@ -232,7 +223,7 @@ instance AntPosition P17 B17 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P17 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P18 B18 where
@@ -241,7 +232,7 @@ instance AntPosition P18 B18 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P18 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P19 B19 where
@@ -250,7 +241,7 @@ instance AntPosition P19 B19 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P19 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P20 B20 where
@@ -259,7 +250,7 @@ instance AntPosition P20 B20 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P20 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P21 B21 where
@@ -268,7 +259,7 @@ instance AntPosition P21 B21 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P21 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P22 B22 where
@@ -277,7 +268,7 @@ instance AntPosition P22 B22 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P22 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P23 B23 where
@@ -286,7 +277,7 @@ instance AntPosition P23 B23 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P23 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P24 B24 where
@@ -295,9 +286,8 @@ instance AntPosition P24 B24 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P24 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 instance AntPosition P25 B25 where
   updatePosition evr (B25 b1 b2 b3) (P25 md1 md2 md3) (P25 std1 std2 std3) gen =
@@ -305,9 +295,8 @@ instance AntPosition P25 B25 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P25 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-
 
 instance AntPosition P26 B26 where
   updatePosition evr (B26 b1 b2 b3) (P26 md1 md2 md3) (P26 std1 std2 std3) gen =
@@ -315,7 +304,7 @@ instance AntPosition P26 B26 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P26 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P27 B27 where
@@ -324,7 +313,7 @@ instance AntPosition P27 B27 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P27 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P28 B28 where
@@ -333,7 +322,7 @@ instance AntPosition P28 B28 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P28 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P29 B29 where
@@ -342,7 +331,7 @@ instance AntPosition P29 B29 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P29 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
 
 instance AntPosition P30 B30 where
@@ -351,6 +340,5 @@ instance AntPosition P30 B30 where
         (T2 x2' gen2) = updatePosition evr b2 md2 std2 gen1
         (T2 x3' gen3) = updatePosition evr b3 md3 std3 gen2
         pos = P30 x1' x2' x3'
-    in T2 pos gen3
+     in T2 pos gen3
   updatePosition _ _ _ _ _ = error "updatePosition: impossible case"
-

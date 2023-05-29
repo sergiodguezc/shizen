@@ -3,7 +3,7 @@
 
 -- |
 -- Module    : Shizen.AntColony.AntColony
--- Description : Short description
+-- Description : Continuous Ant Colony Optimization
 -- Copyright : (c) Sergio Domínguez
 -- License   : BSD3
 -- Maintainer: Sergio Domínguez <sergdoma@ucm.es>
@@ -12,8 +12,9 @@
 --
 -- An implementation of Ant Colony optimization algorithm for continuous
 -- functions.
+
 module Shizen.AntColony.AntColony
-  ( module Shizen.AntColony.AntColony,
+  ( aco,
   )
 where
 
@@ -25,30 +26,19 @@ import Shizen.AntColony.Types
 import Shizen.Utils
 import qualified Prelude as P
 
--- | Pheromone update function. It depends on the index of the ant in the
--- archive, the number of ants in the archive, and the evaporation rate.
+-- | Pheromone update function. Compute and normalize the fitness of each ant.
 pheromones ::
   forall p b.
   AntPosition p b =>
-  -- Exp Int ->
-  -- Exp R ->
   Acc (Vector (Ant p)) ->
   Acc (Vector R)
-pheromones {- n evr -} ants =
-  -- let weights = A.map (\(T2 (I1 i) _) -> gaussian n evr i) (indexed ants) :: Acc (Vector R)
-  --     weightsS = the $ A.sum weights
-  let weights = map getObjective ants :: Acc (Vector R)
-      weightsS = the $ sum weights
-   in map (/ weightsS) weights :: Acc (Vector R)
-    -- where
-    --  gaussian :: Exp Int -> Exp R -> Exp Int -> Exp R
-    --  gaussian n' evr' i =
-    --     let rank = fromIntegral i :: Exp R
-    --         k = fromIntegral n' :: Exp R
-    --     in -- Harcoded: 0.005 is the standard deviation of the gaussian
-    --     -- A.exp (A.negate ((rank A.** 2) A./ (2 A.* (evr' A.** 2) A.* (k A.** 2)))) A./ (k A.* A.sqrt (2 A.* A.pi))
-    --     exp (negate ((rank ** 2) / (2 * (evr' ** 2) * (k ** 2)))) / (k * 0.005 * sqrt (2 * pi))
-
+pheromones ants =
+  let objectives = map getObjective ants :: Acc (Vector R)
+      -- Calculate fitness from the objectives
+      fitness = map (\x -> x >= 0 ? (1 / (1 + x), 1 + abs x)) objectives
+      -- Normalize fitness
+      fitnessSum = the $ sum fitness
+   in map (/ fitnessSum) fitness :: Acc (Vector R)
 
 -- | Function that creates a new ant
 newAnt ::
@@ -75,19 +65,42 @@ newAnt gen f evr b refAntPos std =
 pickAnts ::
   forall p b.
   AntPosition p b =>
-  Acc (Vector R) ->
+  Exp Int ->
+  Acc Gen ->
   Acc (Vector R) ->
   Acc (VectorAnt p) ->
-  Acc (VectorAnt p)
-pickAnts randoms distribution ants =
-  let c = length randoms
+  Acc (VectorAnt p, Gen)
+pickAnts c gen distribution ants =
+  let -- We generate a random number for each ant.
+      (randoms, gen') = runRandom gen randomVector :: (Acc (Vector R), Acc Gen)
       randomsMatrix = replicate (lift (Z :. c :. All)) randoms
       -- Replicate the distribution vector 'c' times (transposed)
       distributionMatrix = replicate (lift (Z :. All :. c)) distribution
 
       matrixRD = indexed $ zipWith (<) randomsMatrix distributionMatrix
       pickedIndex = fold1 (\(T2 i b1) (T2 j b2) -> b1 ? (T2 i b1, T2 j b2)) matrixRD
-   in map (\(T2 (I2 _ r) _) -> ants !! r) pickedIndex
+   in lift (map (\(T2 (I2 _ r) _) -> ants !! r) pickedIndex, gen')
+
+computeStd ::
+  forall p b.
+  AntPosition p b =>
+  Exp Int ->
+  Exp Int ->
+  Acc (VectorAnt p) ->
+  Acc (VectorAnt p) ->
+  Acc (Vector p)
+computeStd c n picked old  =
+      -- Both matrices have the same size: n x c
+  let positionMartrix = replicate (lift (Z :. c :. All)) (map getPosition old) :: Acc (Matrix p)
+      refPosMatrix = replicate (lift (Z :. All :. n)) (map getPosition picked) :: Acc (Matrix p)
+
+      -- size: c x n.
+      distMatrix = zipWith (\p r -> pmap abs $ difference p r) positionMartrix refPosMatrix :: Acc (Matrix p)
+
+      -- Vector of size c. (n op add)
+      distVector = fold1 add distMatrix :: Acc (Vector p)
+    in map (pmap (/ (fromIntegral n - 1))) distVector
+
 
 -- | Performs a single step of the algorithm.
 makeNewAnts ::
@@ -109,40 +122,24 @@ makeNewAnts ::
   Acc (VectorAnt p, Gen)
 makeNewAnts gen b f c n evr old =
   -- We compute the pheromones for the old ants.
-  let ph = pheromones {- n evr -} old :: Acc (Vector R)
+  let ph = pheromones old :: Acc (Vector R)
       -- Accumulated sum of the probabilities
       distribution = scanl1 (+) ph :: Acc (Vector R)
-      -- Now, we choose 'c' ants from the old ones,
-      -- using the distribution as a probability.
-      -- We generate a random number for each ant.
-      (randoms, gen') = runRandom gen randomVector :: (Acc (Vector R), Acc Gen)
 
-      pickedAnts = pickAnts randoms distribution old :: Acc (VectorAnt p)
+      -- Choose 'c' ants as references
+      T2 pickedAnts gen' = pickAnts c gen distribution old
 
-      -- Both matrices have the same size: n x c
-      refPosMatrix = replicate (lift (Z :. n :. All)) (map getPosition pickedAnts) :: Acc (Matrix p)
-      positionMartrix = replicate (lift (Z :. All :. c)) (map getPosition old) :: Acc (Matrix p)
+      -- Compute the std for each position
+      stdVector = computeStd c n pickedAnts old
 
-      -- distMatrix = A.transpose $ A.zipWith d2 positionMartrix refPosMatrix :: Acc (Matrix p)
-      -- size: c x n. Compute for better memory locality
-      distMatrix = compute . transpose $ zipWith (\p r -> pmap (A.** 2) $ difference p r) positionMartrix refPosMatrix :: Acc (Matrix p)
-
-      -- Vector of size c. (n op add)
-      distVector = fold1 add distMatrix :: Acc (Vector p)
-      avDist = map (pmap (\xi -> sqrt (xi / fromIntegral n))) distVector :: Acc (Vector p)
-      -- Each projection of avDist is the average distance between the ref ant
-      -- and the other ants
-      -- Now, we have a vector with: ant + std + gen
-      avDistRefAntGen = zip3 pickedAnts avDist gen' :: Acc (Vector (Ant p, p, SFC64))
-
-      newAnts = map (\(T3 a std g) -> newAnt g f evr b (getPosition a) std) avDistRefAntGen :: Acc (Vector (Ant p, SFC64))
+      newAnts = zipWith3 (\a std g -> newAnt g f evr b (getPosition a) std) pickedAnts stdVector gen' :: Acc (Vector (Ant p, SFC64))
 
       -- Convert the new ants to a vector, and the Exp SFC64 to a Gen
-      newAnts' = map (\(T2 a _) -> a) newAnts :: Acc (VectorAnt p)
-      gen'' = map (\(T2 _ g) -> g) newAnts :: Acc Gen
+      newAnts' = mfst newAnts :: Acc (VectorAnt p)
+      gen'' = msnd newAnts :: Acc Gen
 
       -- We sort the new ants, and take the first 'n' ants.
-      sorted = compute $ take n $ merge (compare `on` snd) old n newAnts' c :: Acc (VectorAnt p)
+      sorted = take n $ merge (compare `on` snd) old n newAnts' c :: Acc (VectorAnt p)
    in
       lift (sorted, gen'') :: Acc (VectorAnt p, Gen)
 
